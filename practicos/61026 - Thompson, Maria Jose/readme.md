@@ -1,0 +1,1 @@
+Este es un archivo de prueba para el práctico de Git y GitHub. No tiene contenido relevante, pero sirve para practicar el uso de Git.
