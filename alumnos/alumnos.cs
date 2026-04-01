@@ -378,6 +378,10 @@ class AlumnosManager {
     static List<string> BuscarCarpetasMismoLegajo(string rutaBase, int legajo) {
         List<string> carpetasMismoLegajo = new List<string>();
 
+        if (!Directory.Exists(rutaBase)) {
+            return carpetasMismoLegajo;
+        }
+
         foreach (string carpetaExistente in Directory.GetDirectories(rutaBase)) {
             string nombreCarpetaExistente = Path.GetFileName(carpetaExistente);
 
@@ -390,7 +394,7 @@ class AlumnosManager {
     }
 
     public static void CrearCarpetas(Alumnos alumnos) {
-        string rutaBase = "TP";
+        string rutaBase = Path.Combine("..", "practicos");
         Directory.CreateDirectory(rutaBase);
 
         foreach (Alumno alumno in alumnos) {
@@ -428,7 +432,12 @@ class AlumnosManager {
     }
 
     public static void CopiarFotoPerfil(Alumnos alumnos, string rutaFotos) {
-        string rutaBase = "TP";
+        string rutaBase = Path.Combine("..", "practicos");
+
+        if (!Directory.Exists(rutaBase)) {
+            Console.WriteLine($"No existe la carpeta base de prácticos: {rutaBase}");
+            return;
+        }
 
         foreach (Alumno alumno in alumnos) {
             if (string.IsNullOrWhiteSpace(alumno.TelefonoId)) {
@@ -466,9 +475,61 @@ class AlumnosManager {
     }
 
     public static void CopiarEnunciadoPracticos(Alumnos alumnos, string practico){
-        
-        
+        string nombrePractico = practico.Trim();
+        string rutaOrigen = Path.Combine("..", "enunciados", nombrePractico);
+        string rutaBasePracticos = Path.Combine("..", "practicos");
+        string carpetaPractico = nombrePractico.ToLower();
+
+        if (string.IsNullOrWhiteSpace(nombrePractico)) {
+            Console.WriteLine("Debe indicar el nombre del práctico a copiar.");
+            return;
+        }
+
+        if (!Directory.Exists(rutaOrigen)) {
+            Console.WriteLine($"No existe la carpeta del enunciado: {rutaOrigen}");
+            return;
+        }
+
+        if (!Directory.Exists(rutaBasePracticos)) {
+            Console.WriteLine($"No existe la carpeta base de prácticos: {rutaBasePracticos}");
+            return;
+        }
+
+        foreach (Alumno alumno in alumnos) {
+            string rutaAlumno = Path.Combine(rutaBasePracticos, alumno.CarpetaNombre);
+
+            if (!Directory.Exists(rutaAlumno)) {
+                Console.WriteLine($"No existe la carpeta del alumno: {rutaAlumno}");
+                continue;
+            }
+
+            string rutaDestino = Path.Combine(rutaAlumno, carpetaPractico);
+
+            try {
+                CopiarContenidoDirectorio(rutaOrigen, rutaDestino);
+                Console.WriteLine($"Enunciado copiado: {rutaOrigen} -> {rutaDestino}");
+            } catch (Exception ex) {
+                Console.WriteLine($"Error al copiar el enunciado para {alumno.CarpetaNombre}: {ex.Message}");
+            }
+        }
     }
+
+    static void CopiarContenidoDirectorio(string rutaOrigen, string rutaDestino) {
+        Directory.CreateDirectory(rutaDestino);
+
+        foreach (string archivoOrigen in Directory.GetFiles(rutaOrigen)) {
+            string nombreArchivo = Path.GetFileName(archivoOrigen);
+            string archivoDestino = Path.Combine(rutaDestino, nombreArchivo);
+            File.Copy(archivoOrigen, archivoDestino, overwrite: true);
+        }
+
+        foreach (string subdirectorioOrigen in Directory.GetDirectories(rutaOrigen)) {
+            string nombreSubdirectorio = Path.GetFileName(subdirectorioOrigen);
+            string subdirectorioDestino = Path.Combine(rutaDestino, nombreSubdirectorio);
+            CopiarContenidoDirectorio(subdirectorioOrigen, subdirectorioDestino);
+        }
+    }
+
     public static void ActualizarDesdePerfiles(Alumnos alumnos, string rutaPerfiles) {
         Dictionary<int, Alumno> porLegajo = new Dictionary<int, Alumno>();
 
@@ -1049,10 +1110,10 @@ class Program {
 
         AlumnosManager.Listar(alumnos.ParaAgregar());
 
-        AlumnosManager.GuardarVCard(alumnos.ParaAgregar().EnComision("C7"), "alumnos-agregar-c7.vcf");
-        AlumnosManager.GuardarVCard(alumnos.ParaAgregar().EnComision("C9"), "alumnos-agregar-c9.vcf");
+        // AlumnosManager.GuardarVCard(alumnos.ParaAgregar().EnComision("C7"), "alumnos-agregar-c7.vcf");
+        // AlumnosManager.GuardarVCard(alumnos.ParaAgregar().EnComision("C9"), "alumnos-agregar-c9.vcf");
         // wapp.InvitarGrupoComision(alumnos.ParaAgregar());
-
+        AlumnosManager.CopiarEnunciadoPracticos(alumnos, "tp1");
     }
 }
 

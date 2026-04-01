@@ -203,14 +203,16 @@ Laura,González,38,95000,Gerencia
 
 > [!NOTE]
 > Si bien el comando `sortx` se menciona para ilustrar el uso, la entrega es un archivo `sortx.cs` que se compila y ejecuta con `dotnet run sortx.cs -- [args]`. 
+> No es necesario generar un ejecutable separado.
 
-No es necesario generar un ejecutable separado.
+> [!TIP]
+> Como se crea el ambiente de desarrollo:
+> [Ver Instrucciones de creacion del ambiente de desarrollo](./como-crear-entorno-desarrollo.md)
 
-> [!TIP] Como se crea el ambiente de desarrollo:
-  [Ver Instrucciones de creacion del ambiente de desarrollo](./como-crear-entorno-desarrollo.md)
+> [!TIP]
+> Como entregar el trabajo:
+> [Ver Instrucciones de entrega](./como-entregar-practico.md)
 
-> [!TIP] Como entregar el trabajo:
-  [Ver Instrucciones de entrega](./como-entregar-practico.md)
-
-> [!TIP] Como conseguir GitHub Copilot:
-  [Ver Instrucciones para conseguir GitHub Copilot](./como-conseguir-github-copilot.md)
+> [!TIP]
+> Como conseguir GitHub Copilot:
+> [Ver Instrucciones para conseguir GitHub Copilot](./como-conseguir-github-copilot.md)
