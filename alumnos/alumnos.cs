@@ -465,6 +465,10 @@ class AlumnosManager {
         }
     }
 
+    public static void CopiarEnunciadoPracticos(Alumnos alumnos, string practico){
+        
+        
+    }
     public static void ActualizarDesdePerfiles(Alumnos alumnos, string rutaPerfiles) {
         Dictionary<int, Alumno> porLegajo = new Dictionary<int, Alumno>();
 
