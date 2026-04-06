@@ -15,12 +15,35 @@ catch (Exception ex)
 
 AppConfig ParseArgs(string[] args)
 {
+    string? input = null;
+    var sortFields = new List<SortField>();
+
+    for (int i = 0; i < args.Length; i++)
+    {
+        if (args[i] == "-b" || args[i] == "--by")
+        {
+            var parts = args[i + 1].Split(':');
+
+            string name = parts[0];
+            bool numeric = parts.Length > 1 && parts[1] == "num";
+            bool desc = parts.Length > 2 && parts[2] == "desc";
+
+            sortFields.Add(new SortField(name, numeric, desc));
+
+            i++;
+        }
+        else
+        {
+            input = args[i];
+        }
+    }
+
     return new AppConfig(
-        InputFile: args.Length > 0 ? args[0] : null,
+        InputFile: input,
         OutputFile: null,
         Delimiter: ",",
         NoHeader: false,
-        SortFields: new List<SortField>()
+        SortFields: sortFields
     );
 }
 
@@ -86,7 +109,33 @@ List<Dictionary<string, string>> ParseDelimited(string input, AppConfig config)
 
 List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
 {
-    return rows;
+    if (config.SortFields.Count == 0)
+        return rows;
+
+    var field = config.SortFields[0];
+
+    if (field.Numeric)
+    {
+        if (field.Descending)
+        {
+            return rows.OrderByDescending(r => double.Parse(r[field.Name])).ToList();
+        }
+        else
+        {
+            return rows.OrderBy(r => double.Parse(r[field.Name])).ToList();
+        }
+    }
+    else
+    {
+        if (field.Descending)
+        {
+            return rows.OrderByDescending(r => r[field.Name]).ToList();
+        }
+        else
+        {
+            return rows.OrderBy(r => r[field.Name]).ToList();
+        }
+    }
 }
 
 string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
