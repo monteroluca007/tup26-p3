@@ -1,3 +1,26 @@
+# Repositorio de la materia: Programación III
+
+Este es el repositorio oficial de la materia **Programación III** del **TUP (Técnico Universitario en Programación)**, dictada por el profesor **Alejandro Di Battista**.
+
+## ¿Qué hay en este repositorio?
+
+| Carpeta / Archivo | Contenido |
+|---|---|
+| [`apuntes/`](./apuntes/) | Apuntes y material teórico de la materia |
+| [`clases/`](./clases/) | Materiales utilizados durante las clases |
+| [`enunciados/`](./enunciados/) | Enunciados de los trabajos prácticos |
+| [`practicos/`](./practicos/) | Entregas individuales de cada alumno |
+| [`alumnos/`](./alumnos/) | Listado y datos de alumnos |
+| [`como-crear-entorno-desarrollo.md`](./como-crear-entorno-desarrollo.md) | Guía para configurar el ambiente de desarrollo |
+| [`como-entregar-practico.md`](./como-entregar-practico.md) | Instrucciones para entregar los trabajos prácticos |
+| [`como-conseguir-github-copilot.md`](./como-conseguir-github-copilot.md) | Cómo obtener acceso a GitHub Copilot |
+
+## ¿Cómo se trabaja en este repositorio?
+
+Cada alumno trabaja en su propia rama (`tp-01/nombre-apellido`) y entrega su trabajo mediante un **Pull Request**. Las entregas se guardan en la carpeta `practicos/[legajo - nombre apellido]/`.
+
+---
+
 # Trabajo Práctico 1 — Herramienta CLI: `sortx`
 
 **Materia:** Programación III  
