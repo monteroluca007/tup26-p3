@@ -12,7 +12,7 @@ var coverCandidates = new[] { "portada.png", "portada.jpg", "portada.jpeg" };
 
 var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 {
-    "00-programa-de-programacion-iii.md"
+    "120-programa-de-programacion-iii.md"
 };
 
 var root = ResolveRoot(args, excluded);

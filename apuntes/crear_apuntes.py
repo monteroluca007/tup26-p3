@@ -20,7 +20,7 @@ BOOK_LANGUAGE = "es"
 BOOK_SUBTITLE = "C#, .NET y herramientas de desarrollo"
 BOOK_AUTHOR = "Adrián Di Battista"
 BOOK_COVER = ROOT / "portada.jpg"
-EXCLUDED = {"00-programa-de-programacion-iii.md"}
+EXCLUDED = {"00.010-programa-de-programacion-iii.md"}
 
 
 def slugify(text: str) -> str:

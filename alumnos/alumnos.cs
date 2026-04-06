@@ -8,54 +8,57 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-enum Estado {
-    Vacio,
-    EnProgreso,
-    Aprobado,
-    Desaprobado
+[Flags]
+enum Estado: int {
+    Vacio       = 0,
+    Aprobado    = 1,
+    Pendiente   = 2,
+    Revision    = 4,
+    Desaprobado = 8,
 }
 
 static class EstadoExtensions {
     public static string ToEmoji(this Estado estado) {
         return estado switch {
-            Estado.EnProgreso  => "🟡",
-            Estado.Desaprobado => "🔴",
-            Estado.Aprobado    => "🟢",
-            Estado.Vacio       => string.Empty,
+            Estado.Desaprobado  => "🔴",
+            Estado.Revision     => "🟠",
+            Estado.Pendiente    => "🟡",
+            Estado.Aprobado     => "🟢",
+            Estado.Vacio        => "⚪️",
             _ => string.Empty
         };
     }
 
     public static Estado Parse(string? valor) {
-        return valor?.Trim() switch {
-            "🟡" => Estado.EnProgreso,
-            "🔴" => Estado.Desaprobado,
-            "🟢" => Estado.Aprobado,
-            "" => Estado.Vacio,
-            "-" => Estado.Vacio,
-            "—" => Estado.Vacio,
-            "⚪️" => Estado.Vacio,
+        string? v = valor?.Trim().ToUpperInvariant();
+
+        return v switch {
+            "🔴" or "D" => Estado.Desaprobado,
+            "🟠" or "R" => Estado.Revision,
+            "🟡" or "P" => Estado.Pendiente,
+            "🟢" or "A" => Estado.Aprobado,
+            "" or "-" or "⚪️" or null => Estado.Vacio,
             _ => Estado.Vacio,
         };
     }
 }
 
 class Alumno {
-    public int legajo;
-    public string comision = string.Empty;
-    public string nombre = string.Empty;
-    public string apellido = string.Empty;
-    public string telefono = string.Empty;
-    public bool tieneFoto;
-    public string gitHub = string.Empty;
+    public int Legajo;
+    public string Comision = string.Empty;
+    public string Nombre = string.Empty;
+    public string Apellido = string.Empty;
+    public string Telefono = string.Empty;
+    public bool TieneFoto;
+    public string GitHub = string.Empty;
     public List<Estado> practicos = new();
     public List<Estado> examenes = new();
 
-    public string CarpetaNombre => $"{legajo} - {apellido}, {nombre}";
-    public string TelefonoId => FormatearTelefonoId(telefono);
+    public string CarpetaNombre => $"{Legajo} - {Apellido}, {Nombre}";
+    public string TelefonoId => FormatearTelefonoId(Telefono);
 
     public void Practico(int numero, Estado estado){
-        if (practicos == null) { practicos = new List<Estado>(); }
+        if (practicos == null) { practicos = new(); }
 
         while(practicos.Count < numero){
             practicos.Add(Estado.Vacio);
@@ -65,7 +68,7 @@ class Alumno {
     }
     
     public void Examen(int numero, Estado estado){
-        if (examenes == null) { examenes = new List<Estado>(); }
+        if (examenes == null) { examenes = new(); }
 
         while(examenes.Count < numero){
             examenes.Add(Estado.Vacio);
@@ -95,10 +98,15 @@ class Alumno {
 
         return $"549{digitos}";
     }
+
+    public bool ConGithub => !string.IsNullOrWhiteSpace(GitHub) && GitHub.Length > 3;  
+    public bool ConFoto => TieneFoto;
+    public bool ConTelefono => !string.IsNullOrWhiteSpace(Telefono);
+    public string NombreCompleto => $"{Apellido}, {Nombre}".Trim().Trim(',');
 }
 
 class Alumnos: IEnumerable<Alumno> {
-    public List<Alumno> Lista { get; set; } = new List<Alumno>();
+    public List<Alumno> Lista { get; set; } = new();
 
     public int Count => Lista.Count;
 
@@ -106,28 +114,34 @@ class Alumnos: IEnumerable<Alumno> {
         get { return Lista[index]; }
     }
 
-    public Alumnos(List<Alumno> alumnos) {
-        Lista = alumnos ?? new List<Alumno>();
+    public Alumnos(IEnumerable<Alumno> alumnos) {
+        Lista = alumnos?.ToList() ?? new();
     }   
 
     public void Agregar(Alumno alumno) {
         Lista.Add(alumno);
     }
 
-    public Alumnos FiltrarSinGithub() =>
-        new Alumnos( Lista.Where(alumno => string.IsNullOrWhiteSpace(alumno.gitHub)).ToList());
+    public Alumnos ConGithub(bool tiene = true) =>
+        new Alumnos(Lista.Where(alumno => tiene == alumno.ConGithub));
 
-    public Alumnos SinTelefono() =>
-        new Alumnos( Lista.Where(alumno => string.IsNullOrWhiteSpace(alumno.TelefonoId)).ToList());
+    public Alumnos ConPractico(int numero, Estado estado) =>
+        new Alumnos(Lista.Where(alumno =>
+            alumno.practicos != null &&
+            alumno.practicos.Count >= numero &&
+            alumno.practicos[numero - 1].HasFlag(estado)));
+        
+    public Alumnos ConTelefono(bool tiene = true) =>
+        new Alumnos(Lista.Where(alumno => tiene == alumno.ConTelefono));
 
-    public Alumnos SinFotos() =>
-        new Alumnos( Lista.Where(alumno => !alumno.tieneFoto).ToList() );
+    public Alumnos ConFotos(bool tiene = true) =>
+        new Alumnos(Lista.Where(alumno => tiene == alumno.ConFoto));
 
     public Alumnos EnComision(string comision) =>
-        new Alumnos( Lista.Where(alumno => string.Equals(alumno.comision, comision, StringComparison.OrdinalIgnoreCase)).ToList() );
+        new Alumnos(Lista.Where(alumno => string.Equals(alumno.Comision, comision, StringComparison.OrdinalIgnoreCase)));
 
     public Alumnos ParaAgregar() =>
-        new Alumnos( Lista.Where(alumno => alumno.gitHub == "(agregar)").ToList() );
+        new Alumnos(Lista.Where(alumno => alumno.GitHub == "(agregar)"));
 
     public IEnumerator<Alumno> GetEnumerator() {
         return Lista.GetEnumerator();
@@ -142,7 +156,7 @@ class AlumnosManager {
     const int LongitudMaximaLineaVcard = 75;
 
     public static Alumnos CargarAlumnos(string rutaArchivo) {
-        Alumnos alumnos = new Alumnos(new List<Alumno>());
+        Alumnos alumnos = new Alumnos(Array.Empty<Alumno>());
         string comisionActual = string.Empty;
         
         try {
@@ -194,13 +208,13 @@ class AlumnosManager {
         }
 
         return new Alumno {
-            legajo    = legajo,
-            comision  = LimpiarCampo(datos[1]),
-            nombre    = LimpiarCampo(datos[2]),
-            apellido  = LimpiarCampo(datos[3]),
-            telefono  = ExtraerTelefono(datos[4]),
-            tieneFoto = ExtraerFoto(datos[5]),
-            gitHub    = ExtraerGitHub(datos[6]),
+            Legajo    = legajo,
+            Comision  = LimpiarCampo(datos[1]),
+            Nombre    = LimpiarCampo(datos[2]),
+            Apellido  = LimpiarCampo(datos[3]),
+            Telefono  = ExtraerTelefono(datos[4]),
+            TieneFoto = ExtraerFoto(datos[5]),
+            GitHub    = ExtraerGitHub(datos[6]),
             practicos = ExtraerPracticos(datos[7]),
             examenes  = ExtraerExamenes(datos[8])
         };
@@ -224,13 +238,13 @@ class AlumnosManager {
         (string apellido, string nombre) = ExtraerApellidoNombre(columnas[1]);
 
         return new Alumno {
-            legajo = legajo,
-            comision = LimpiarCampo(comisionActual),
-            nombre = nombre,
-            apellido = apellido,
-            telefono = ExtraerTelefono(columnas[2]),
-            tieneFoto = ExtraerFoto(columnas[3]),
-            gitHub = ExtraerGitHub(columnas[4]),
+            Legajo = legajo,
+            Comision = LimpiarCampo(comisionActual),
+            Nombre = nombre,
+            Apellido = apellido,
+            Telefono = ExtraerTelefono(columnas[2]),
+            TieneFoto = ExtraerFoto(columnas[3]),
+            GitHub = ExtraerGitHub(columnas[4]),
             practicos = ExtraerPracticos(columnas[5]),
             examenes = ExtraerExamenes(columnas[6])
         };
@@ -239,7 +253,7 @@ class AlumnosManager {
     
     public static void Guardar(Alumnos alumnos, string rutaArchivo) {
         try {
-            List<Alumno> alumnosOrdenados =  new List<Alumno>(alumnos);
+            List<Alumno> alumnosOrdenados = new(alumnos);
             alumnosOrdenados.Sort(CompararAlumnos);
 
             StringBuilder sb = new StringBuilder();
@@ -260,8 +274,8 @@ class AlumnosManager {
                     comisionActual = comisionAlumno;
                     sb.AppendLine($"## {comisionActual}");
                     sb.AppendLine("```text");
-                    sb.AppendLine("Legajo  Nombre y Apellido           Telefono         Foto  Github                Practicos           Examenes         ");
-                    sb.AppendLine("------  --------------------------  ---------------  ----  --------------------  ------------------  ------------------");
+                    sb.AppendLine("Legajo  Nombre y Apellido           Telefono         Foto  Github                   Practicos           Examenes         ");
+                    sb.AppendLine("------  --------------------------  ---------------  ----  -----------------------  ------------------  ------------------");
                 }
 
                 sb.AppendLine(FormatearFila(alumno));
@@ -284,7 +298,7 @@ class AlumnosManager {
             return;
         }
 
-        List<Alumno> alumnosOrdenados = new List<Alumno>(alumnos);
+        List<Alumno> alumnosOrdenados = new(alumnos);
         alumnosOrdenados.Sort(CompararAlumnos);
 
         string encabezado = FormatearFilaTabla("Legajo", "Nombre y Apellido", "Telefono", "Foto", "GitHub", "Comision", "Practicos", "Examenes");
@@ -299,11 +313,11 @@ class AlumnosManager {
 
         foreach (Alumno alumno in alumnosOrdenados) {
             Console.WriteLine(FormatearFilaTabla(
-                alumno.legajo.ToString(),
+                alumno.Legajo.ToString(),
                 ObtenerNombreApellido(alumno),
-                FormatearTexto(alumno.telefono),
-                alumno.tieneFoto ? "Si" : "No",
-                FormatearGitHub(alumno.gitHub),
+                FormatearTexto(alumno.Telefono),
+                alumno.TieneFoto ? "Si" : "No",
+                FormatearGitHub(alumno.GitHub),
                 ObtenerComision(alumno),
                 FormatearEstados(alumno.practicos),
                 FormatearEstados(alumno.examenes)));
@@ -319,7 +333,7 @@ class AlumnosManager {
         string colNombreApellido = AjustarColumna(nombreApellido, 26);
         string colTelefono       = AjustarColumna(telefono, 15);
         string colFoto           = AjustarColumna(foto, 4);
-        string colGitHub         = AjustarColumna(gitHub, 20);
+        string colGitHub         = AjustarColumna(gitHub, 25);
         string colComision       = AjustarColumna(comision, 10);
         string colPruebas        = AjustarColumna(pruebas, 20);
         string colExamenes       = AjustarColumna(examenes, 20);
@@ -334,29 +348,29 @@ class AlumnosManager {
             return comparacion;
         }
 
-        comparacion = string.Compare(FormatearTexto(alumnoA.apellido), FormatearTexto(alumnoB.apellido), StringComparison.OrdinalIgnoreCase);
+        comparacion = string.Compare(FormatearTexto(alumnoA.Apellido), FormatearTexto(alumnoB.Apellido), StringComparison.OrdinalIgnoreCase);
         if (comparacion != 0) {
             return comparacion;
         }
 
-        comparacion = string.Compare(FormatearTexto(alumnoA.nombre), FormatearTexto(alumnoB.nombre), StringComparison.OrdinalIgnoreCase);
+        comparacion = string.Compare(FormatearTexto(alumnoA.Nombre), FormatearTexto(alumnoB.Nombre), StringComparison.OrdinalIgnoreCase);
         if (comparacion != 0) {
             return comparacion;
         }
 
-        return alumnoA.legajo.CompareTo(alumnoB.legajo);
+        return alumnoA.Legajo.CompareTo(alumnoB.Legajo);
     }
 
     static string ObtenerComision(Alumno alumno) {
-        return FormatearTexto(alumno.comision);
+        return FormatearTexto(alumno.Comision);
     }
 
     static string FormatearFila(Alumno alumno) {
-        string legajo         = AjustarColumna(alumno.legajo.ToString(), 6);
+        string legajo         = AjustarColumna(alumno.Legajo.ToString(), 6);
         string nombreApellido = AjustarColumna(ObtenerNombreApellido(alumno), 26);
-        string telefono       = AjustarColumna(FormatearTexto(alumno.telefono), 15);
-        string foto           = AjustarColumna(alumno.tieneFoto ? "Si" : "No", 4);
-        string gitHub         = AjustarColumna(FormatearGitHub(alumno.gitHub), 20);
+        string telefono       = AjustarColumna(FormatearTexto(alumno.Telefono), 15);
+        string foto           = AjustarColumna(alumno.TieneFoto ? "Si" : "No", 4);
+        string gitHub         = AjustarColumna(FormatearGitHub(alumno.GitHub), 23);
         string pruebas        = AjustarColumna(FormatearEstados(alumno.practicos, 10));
         string examenes       = AjustarColumna(FormatearEstados(alumno.examenes, 10));
 
@@ -364,8 +378,8 @@ class AlumnosManager {
     }
 
     static string ObtenerNombreApellido(Alumno alumno) {
-        string apellido = FormatearTexto(alumno.apellido);
-        string nombre   = FormatearTexto(alumno.nombre);
+        string apellido = FormatearTexto(alumno.Apellido);
+        string nombre   = FormatearTexto(alumno.Nombre);
 
         if (apellido == "—") {
             return nombre;
@@ -451,7 +465,7 @@ class AlumnosManager {
             return new List<Estado>();
         }
 
-        List<Estado> estados = new List<Estado>();
+        List<Estado> estados = new();
         TextElementEnumerator enumerador = StringInfo.GetTextElementEnumerator(valor);
 
         while (enumerador.MoveNext()) {
@@ -484,7 +498,7 @@ class AlumnosManager {
     }
 
     static List<string> BuscarCarpetasMismoLegajo(string rutaBase, int legajo) {
-        List<string> carpetasMismoLegajo = new List<string>();
+        List<string> carpetasMismoLegajo = new();
 
         if (!Directory.Exists(rutaBase)) {
             return carpetasMismoLegajo;
@@ -510,7 +524,7 @@ class AlumnosManager {
             string rutaCarpeta = Path.Combine(rutaBase, nombreCarpeta);
 
             try {
-                List<string> carpetasMismoLegajo = BuscarCarpetasMismoLegajo(rutaBase, alumno.legajo);
+                List<string> carpetasMismoLegajo = BuscarCarpetasMismoLegajo(rutaBase, alumno.Legajo);
 
                 if (carpetasMismoLegajo.Count == 0) {
                     Directory.CreateDirectory(rutaCarpeta);
@@ -519,7 +533,7 @@ class AlumnosManager {
                 }
 
                 if (carpetasMismoLegajo.Count > 1) {
-                    Console.WriteLine($"Hay múltiples carpetas para el legajo {alumno.legajo}. Revisar manualmente antes de renombrar.");
+                    Console.WriteLine($"Hay múltiples carpetas para el legajo {alumno.Legajo}. Revisar manualmente antes de renombrar.");
                     continue;
                 }
 
@@ -557,7 +571,7 @@ class AlumnosManager {
                 continue;
             }
 
-            List<string> carpetasMismoLegajo = BuscarCarpetasMismoLegajo(rutaBase, alumno.legajo);
+            List<string> carpetasMismoLegajo = BuscarCarpetasMismoLegajo(rutaBase, alumno.Legajo);
             if (carpetasMismoLegajo.Count != 1) {
                 continue;
             }
@@ -642,7 +656,7 @@ class AlumnosManager {
         Dictionary<int, Alumno> porLegajo = new Dictionary<int, Alumno>();
 
         foreach (Alumno alumno in alumnos) {
-            porLegajo[alumno.legajo] = alumno;
+            porLegajo[alumno.Legajo] = alumno;
         }
 
         foreach (string carpetaPerfil in Directory.GetDirectories(rutaPerfiles)) {
@@ -678,9 +692,9 @@ class AlumnosManager {
                 Alumno alumno = porLegajo[legajo];
                 bool actualizado = false;
 
-                if (!string.IsNullOrWhiteSpace(gitHub) && alumno.gitHub != gitHub) {
-                    Console.WriteLine($"  GitHub actualizado {alumno.CarpetaNombre}: '{alumno.gitHub}' -> '{gitHub}'");
-                    alumno.gitHub = gitHub;
+                if (!string.IsNullOrWhiteSpace(gitHub) && alumno.GitHub != gitHub) {
+                    Console.WriteLine($"  GitHub actualizado {alumno.CarpetaNombre}: '{alumno.GitHub}' -> '{gitHub}'");
+                    alumno.GitHub = gitHub;
                     actualizado = true;
                 }
 
@@ -701,13 +715,13 @@ class AlumnosManager {
             for (int i = 0; i < alumnos.Count; i++) {
                 Alumno alumno = alumnos[i];
                 sb.AppendLine("  {");
-                sb.AppendLine($"    \"legajo\": {alumno.legajo},");
-                sb.AppendLine($"    \"comision\": \"{EscaparJson(alumno.comision)}\",");
-                sb.AppendLine($"    \"nombre\": \"{EscaparJson(alumno.nombre)}\",");
-                sb.AppendLine($"    \"apellido\": \"{EscaparJson(alumno.apellido)}\",");
-                sb.AppendLine($"    \"telefono\": \"{EscaparJson(alumno.telefono)}\",");
-                sb.AppendLine($"    \"tieneFoto\": {alumno.tieneFoto.ToString().ToLowerInvariant()},");
-                sb.AppendLine($"    \"gitHub\": \"{EscaparJson(alumno.gitHub)}\",");
+                sb.AppendLine($"    \"legajo\": {alumno.Legajo},");
+                sb.AppendLine($"    \"comision\": \"{EscaparJson(alumno.Comision)}\",");
+                sb.AppendLine($"    \"nombre\": \"{EscaparJson(alumno.Nombre)}\",");
+                sb.AppendLine($"    \"apellido\": \"{EscaparJson(alumno.Apellido)}\",");
+                sb.AppendLine($"    \"telefono\": \"{EscaparJson(alumno.Telefono)}\",");
+                sb.AppendLine($"    \"tieneFoto\": {alumno.TieneFoto.ToString().ToLowerInvariant()},");
+                sb.AppendLine($"    \"gitHub\": \"{EscaparJson(alumno.GitHub)}\",");
                 sb.AppendLine($"    \"practicos\": [ {string.Join(", ", alumno.practicos.Select(p => string.Concat(((char)34).ToString(), p.ToEmoji(), ((char)34).ToString())))} ],");
                 sb.AppendLine($"    \"examenes\": [ {string.Join(", ", alumno.examenes.Select(e => string.Concat(((char)34).ToString(), e.ToEmoji(), ((char)34).ToString())))} ]");
                 sb.Append("  }");
@@ -732,9 +746,9 @@ class AlumnosManager {
             List<Alumno> alumnosConTelefono = alumnos
                 .Where(alumno => !string.IsNullOrWhiteSpace(alumno.TelefonoId))
                 .OrderBy(ObtenerComision)
-                .ThenBy(alumno => FormatearTexto(alumno.apellido), StringComparer.OrdinalIgnoreCase)
-                .ThenBy(alumno => FormatearTexto(alumno.nombre), StringComparer.OrdinalIgnoreCase)
-                .ThenBy(alumno => alumno.legajo)
+                .ThenBy(alumno => FormatearTexto(alumno.Apellido), StringComparer.OrdinalIgnoreCase)
+                .ThenBy(alumno => FormatearTexto(alumno.Nombre), StringComparer.OrdinalIgnoreCase)
+                .ThenBy(alumno => alumno.Legajo)
                 .ToList();
 
             StringBuilder sb = new StringBuilder();
@@ -751,8 +765,8 @@ class AlumnosManager {
     }
 
     static void AppendVCardContacto(StringBuilder sb, Alumno alumno) {
-        string apellido = FormatearTextoVcard(alumno.apellido);
-        string nombre = FormatearTextoVcard(alumno.nombre);
+        string apellido = FormatearTextoVcard(alumno.Apellido);
+        string nombre = FormatearTextoVcard(alumno.Nombre);
         string nombreCompleto = FormatearTextoVcard(ObtenerNombreVisible(alumno));
         string comision = FormatearTextoVcard(ObtenerComision(alumno));
         string etiquetaBusqueda = FormatearTextoVcard(ObtenerEtiquetaBusqueda(alumno));
@@ -766,8 +780,8 @@ class AlumnosManager {
         sb.AppendLine($"NICKNAME:{etiquetaVisible}");
         sb.AppendLine($"ORG:TUP 2026 - Programacion III");
         sb.AppendLine($"CATEGORIES:{etiquetaBusqueda}");
-        sb.AppendLine($"NOTE:Legajo {alumno.legajo} | Comision {comision} | Etiqueta {etiquetaBusqueda} | GitHub {ObtenerGitHubVisible(alumno)}");
-        sb.AppendLine($"X-TUP-LEGAJO:{alumno.legajo}");
+        sb.AppendLine($"NOTE:Legajo {alumno.Legajo} | Comision {comision} | Etiqueta {etiquetaBusqueda} | GitHub {ObtenerGitHubVisible(alumno)}");
+        sb.AppendLine($"X-TUP-LEGAJO:{alumno.Legajo}");
         sb.AppendLine($"X-TUP-COMISION:{comision}");
         sb.AppendLine($"TEL;TYPE=CELL;TYPE=VOICE:{telefonoE164}");
 
@@ -785,8 +799,8 @@ class AlumnosManager {
     }
 
     static string ObtenerNombreVisible(Alumno alumno) {
-        string apellido = FormatearTexto(alumno.apellido);
-        string nombre = FormatearTexto(alumno.nombre);
+        string apellido = FormatearTexto(alumno.Apellido);
+        string nombre = FormatearTexto(alumno.Nombre);
 
         if (apellido == "—") {
             return nombre;
@@ -800,7 +814,7 @@ class AlumnosManager {
     }
 
     static string ObtenerGitHubVisible(Alumno alumno) {
-        string gitHub = FormatearGitHub(alumno.gitHub);
+        string gitHub = FormatearGitHub(alumno.GitHub);
         return gitHub == "-" ? "sin GitHub" : gitHub;
     }
 
@@ -809,7 +823,7 @@ class AlumnosManager {
     }
 
     static string ObtenerEtiquetaVisible(Alumno alumno) {
-        return $"{ObtenerEtiquetaBusqueda(alumno)}-{alumno.legajo}";
+        return $"{ObtenerEtiquetaBusqueda(alumno)}-{alumno.Legajo}";
     }
 
     static string EscaparJson(string texto) {
@@ -827,7 +841,7 @@ class WAppService {
     readonly string? store;
     readonly TimeSpan timeout;
     bool gruposHabilitados = true;
-    List<GrupoWhatsApp> grupos = new List<GrupoWhatsApp>();
+    List<GrupoWhatsApp> grupos = new();
 
     public WAppService(string? store = null, TimeSpan? timeout = null, bool refrescarGrupos = true) {
         this.store = store;
@@ -837,7 +851,7 @@ class WAppService {
             CargarGrupos(refrescarGrupos);
         } catch (InvalidOperationException ex) when (EsErrorAutenticacionWacli(ex)) {
             gruposHabilitados = false;
-            grupos = new List<GrupoWhatsApp>();
+            grupos = new();
             Console.WriteLine("Aviso: wacli no está autenticado; se omite la carga de grupos.");
         }
     }
@@ -856,7 +870,7 @@ class WAppService {
             throw new ArgumentException("El mensaje no puede estar vacío.", nameof(mensaje));
         }
 
-        List<string> argumentos = new List<string> { "send", "text", "--to", destinatario, "--message", mensaje };
+        List<string> argumentos = new() { "send", "text", "--to", destinatario, "--message", mensaje };
 
         Ejecutar(json, argumentos);
     }
@@ -876,7 +890,7 @@ class WAppService {
 
         string grupoJid = ResolverJidGrupo(grupo);
 
-        List<string> argumentos = new List<string> { "groups", "participants", "add", "--jid", grupoJid };
+        List<string> argumentos = new() { "groups", "participants", "add", "--jid", grupoJid };
 
         foreach (string usuario in usuarios) {
             if (string.IsNullOrWhiteSpace(usuario)) { continue; }
@@ -899,12 +913,12 @@ class WAppService {
 
         List<Alumno> alumnosValidos = alumnos
             .Where(alumno =>
-                !string.IsNullOrWhiteSpace(alumno.comision) &&
+                !string.IsNullOrWhiteSpace(alumno.Comision) &&
                 !string.IsNullOrWhiteSpace(alumno.TelefonoId))
             .ToList();
 
         foreach (IGrouping<string, Alumno> grupoComision in alumnosValidos
-            .GroupBy(alumno => ObtenerReferenciaGrupoPorComision(alumno.comision))
+            .GroupBy(alumno => ObtenerReferenciaGrupoPorComision(alumno.Comision))
             .OrderBy(grupo => grupo.Key, StringComparer.OrdinalIgnoreCase)) {
             string[] usuarios = grupoComision
                 .Select(alumno => alumno.TelefonoId)
@@ -919,6 +933,29 @@ class WAppService {
             Console.WriteLine($"Invitando {usuarios.Length} alumno(s) al grupo {grupoComision.Key}...");
             InvitarParticipantesAGrupo(grupoComision.Key, json, usuarios);
         }
+    }
+
+    public record GrupoWhatsApp(string Nombre, string Jid, DateTime? Creado);
+    public record ContactoWhatsApp(string Jid, string Name, string PhoneNumber);
+    
+    public List<ContactoWhatsApp> ListarParticipantesGrupo(string grupo, bool refrescar = false) {
+        if (string.IsNullOrWhiteSpace(grupo)) {
+            throw new ArgumentException("El grupo no puede estar vacío.", nameof(grupo));
+        }
+
+        string grupoJid = ResolverJidGrupoParaLectura(grupo, refrescar);
+
+        if (refrescar && gruposHabilitados) {
+            try {
+                EjecutarYObtenerSalida(false, new() { "groups", "info", "--jid", grupoJid });
+            } catch (InvalidOperationException ex) when (EsErrorAutenticacionWacli(ex)) {
+                gruposHabilitados = false;
+                grupos = new();
+                Console.WriteLine("Aviso: wacli no está autenticado; se usan los participantes de la base local.");
+            }
+        }
+
+        return ListarParticipantesDesdeBaseLocal(grupoJid);
     }
 
     public string? BuscarJidGrupoPorDescripcion(string descripcion, bool refrescar = false) {
@@ -941,7 +978,7 @@ class WAppService {
 
     public List<GrupoWhatsApp> ListarGrupos(bool refrescar = false) {
         if (!gruposHabilitados) {
-            return new List<GrupoWhatsApp>();
+            return new();
         }
 
         if (refrescar || grupos.Count == 0) {
@@ -975,6 +1012,191 @@ class WAppService {
         throw new InvalidOperationException($"No se encontró ningún grupo para '{referencia}'.");
     }
 
+    string ResolverJidGrupoParaLectura(string grupo, bool refrescar) {
+        string referencia = grupo.Trim();
+
+        if (EsJidGrupo(referencia)) {
+            return referencia;
+        }
+
+        if (gruposHabilitados) {
+            GrupoWhatsApp? coincidencia = BuscarGrupoPorReferencia(referencia, refrescar);
+            if (coincidencia != null) {
+                return coincidencia.Jid;
+            }
+        }
+
+        string? grupoJid = BuscarJidGrupoEnBaseLocal(referencia);
+        if (!string.IsNullOrWhiteSpace(grupoJid)) {
+            return grupoJid;
+        }
+
+        throw new InvalidOperationException($"No se encontró ningún grupo para '{referencia}'.");
+    }
+
+    string? BuscarJidGrupoEnBaseLocal(string referencia) {
+        string valor = EscaparSqlite(referencia.Trim());
+
+        List<string> coincidenciasExactas = EjecutarSqlite(
+            $"SELECT jid FROM groups WHERE lower(name) = lower('{valor}') OR lower(jid) = lower('{valor}') ORDER BY name, jid;");
+
+        if (coincidenciasExactas.Count == 1) {
+            return coincidenciasExactas[0];
+        }
+
+        if (coincidenciasExactas.Count > 1) {
+            throw new InvalidOperationException($"La referencia exacta '{referencia}' coincide con varios grupos locales.");
+        }
+
+        List<string> coincidenciasParciales = EjecutarSqlite(
+            $"SELECT jid FROM groups WHERE lower(name) LIKE lower('%{valor}%') OR lower(jid) LIKE lower('%{valor}%') ORDER BY name, jid;");
+
+        if (coincidenciasParciales.Count == 1) {
+            return coincidenciasParciales[0];
+        }
+
+        if (coincidenciasParciales.Count > 1) {
+            throw new InvalidOperationException($"La búsqueda '{referencia}' coincide con varios grupos locales.");
+        }
+
+        return null;
+    }
+
+    List<ContactoWhatsApp> ListarParticipantesDesdeBaseLocal(string grupoJid) {
+        string jid = EscaparSqlite(grupoJid);
+        string rutaSessionDb = EscaparSqlite(Path.Combine(ObtenerDirectorioStore(), "session.db"));
+
+        List<string> filas = EjecutarSqlite(
+            $@"ATTACH DATABASE '{rutaSessionDb}' AS session;
+                SELECT
+                    gp.user_jid || char(9) ||
+                    COALESCE(
+                        NULLIF(ca.alias, ''),
+                        NULLIF(c.full_name, ''),
+                        NULLIF(c.push_name, ''),
+                        NULLIF(c.business_name, ''),
+                        NULLIF(c.first_name, ''),
+                        NULLIF(sc.full_name, ''),
+                        NULLIF(sc.push_name, ''),
+                        NULLIF(sc.business_name, ''),
+                        NULLIF(sc.first_name, ''),
+                        gp.user_jid
+                    ) || char(9) ||
+                    COALESCE(
+                        NULLIF(c.phone, ''),
+                        NULLIF(sc.redacted_phone, ''),
+                        NULLIF(lm.pn, ''),
+                        ''
+                    )
+                FROM group_participants gp
+                LEFT JOIN session.whatsmeow_lid_map lm
+                    ON replace(gp.user_jid, '@lid', '') = lm.lid
+                LEFT JOIN contacts c
+                    ON c.phone = lm.pn
+                    OR c.jid = lm.pn || '@s.whatsapp.net'
+                LEFT JOIN contact_aliases ca
+                    ON ca.jid = gp.user_jid
+                    OR ca.jid = lm.pn || '@s.whatsapp.net'
+                LEFT JOIN session.whatsmeow_contacts sc
+                    ON sc.their_jid = gp.user_jid
+                    OR sc.their_jid = lm.pn || '@s.whatsapp.net'
+                WHERE gp.group_jid = '{jid}'
+                ORDER BY CASE gp.role WHEN 'superadmin' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, gp.user_jid;");
+
+        return filas.Select(ParsearContactoWhatsApp).ToList();
+    }
+
+    static ContactoWhatsApp ParsearContactoWhatsApp(string fila) {
+        string[] partes = fila.Split('\t');
+
+        string jid = partes.Length > 0 ? partes[0].Trim() : string.Empty;
+        string nombre = partes.Length > 1 ? partes[1].Trim() : string.Empty;
+        string telefono = partes.Length > 2 ? partes[2].Trim() : string.Empty;
+
+        if (string.IsNullOrWhiteSpace(nombre)) {
+            nombre = jid;
+        }
+
+        if (string.IsNullOrWhiteSpace(telefono)) {
+            telefono = ExtraerTelefonoDesdeJid(jid);
+        }
+
+        return new ContactoWhatsApp(jid, nombre, telefono);
+    }
+
+    static string ExtraerTelefonoDesdeJid(string jid) {
+        if (string.IsNullOrWhiteSpace(jid)) {
+            return string.Empty;
+        }
+
+        int separador = jid.IndexOf('@');
+        string candidato = separador >= 0 ? jid.Substring(0, separador) : jid;
+
+        return candidato.All(char.IsDigit) ? candidato : string.Empty;
+    }
+
+    List<string> EjecutarSqlite(string query) {
+        string rutaDb = Path.Combine(ObtenerDirectorioStore(), "wacli.db");
+
+        if (!File.Exists(rutaDb)) {
+            Console.WriteLine($"Aviso: no existe la base local de wacli: {rutaDb}");
+            return new();
+        }
+
+        ProcessStartInfo startInfo = new ProcessStartInfo {
+            FileName = "sqlite3",
+            RedirectStandardInput = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        startInfo.ArgumentList.Add(rutaDb);
+        startInfo.ArgumentList.Add(query);
+
+        using Process proceso = Process.Start(startInfo)
+            ?? throw new InvalidOperationException("No se pudo iniciar sqlite3.");
+
+        string salida = proceso.StandardOutput.ReadToEnd().Trim();
+        string error = proceso.StandardError.ReadToEnd().Trim();
+
+        proceso.WaitForExit();
+
+        if (proceso.ExitCode != 0) {
+            string detalle = string.IsNullOrWhiteSpace(error) ? salida : error;
+            throw new InvalidOperationException($"sqlite3 falló con código {proceso.ExitCode}: {detalle}");
+        }
+
+        return salida.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
+                     .Select(linea => linea.Trim())
+                     .Where(linea => !string.IsNullOrWhiteSpace(linea))
+                     .ToList();
+    }
+
+    string ObtenerDirectorioStore() {
+        string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+        if (string.IsNullOrWhiteSpace(store)) {
+            return Path.Combine(home, ".wacli");
+        }
+
+        if (store == "~") {
+            return home;
+        }
+
+        if (store.StartsWith("~/", StringComparison.Ordinal)) {
+            return Path.Combine(home, store.Substring(2));
+        }
+
+        return Environment.ExpandEnvironmentVariables(store);
+    }
+
+    static string EscaparSqlite(string valor) {
+        return valor.Replace("'", "''");
+    }
+
+    
     GrupoWhatsApp? BuscarGrupoPorReferencia(string referencia, bool refrescar) {
         string textoBuscado = referencia.Trim();
         List<GrupoWhatsApp> gruposDisponibles = ListarGrupos(refrescar);
@@ -1014,15 +1236,15 @@ class WAppService {
 
     void CargarGrupos(bool refrescar) {
         if (!gruposHabilitados) {
-            grupos = new List<GrupoWhatsApp>();
+            grupos = new();
             return;
         }
 
         if (refrescar) {
-            Ejecutar(false, new List<string> { "groups", "refresh" });
+            Ejecutar(false, new() { "groups", "refresh" });
         }
 
-        string salida = EjecutarYObtenerSalida(false, new List<string> { "groups", "list" });
+        string salida = EjecutarYObtenerSalida(false, new() { "groups", "list" });
         grupos = ParsearGrupos(salida);
     }
 
@@ -1049,7 +1271,7 @@ class WAppService {
     }
 
     static List<GrupoWhatsApp> ParsearGrupos(string salida) {
-        List<GrupoWhatsApp> grupos = new List<GrupoWhatsApp>();
+        List<GrupoWhatsApp> grupos = new();
 
         foreach (string linea in salida.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)) {
             string actual = linea.Trim();
@@ -1183,17 +1405,153 @@ class WAppService {
 record GrupoWhatsApp(string Nombre, string Jid, DateTime? Creado);
 
 
+class GitHub {
+    readonly string owner;
+    readonly string repo;
+
+    public GitHub(string owner = "AlejandroDiBattista", string repo = "tup26-p3") {
+        this.owner = owner;
+        this.repo = repo;
+    }
+
+    public bool AgregarColaborador(string usuario) {
+        (string salida, string error, int codigoSalida) = EjecutarGh(new[] {
+            "api", "--method", "PUT", $"repos/{owner}/{repo}/collaborators/{usuario}", "-f", "permission=push"
+        });
+
+        if (codigoSalida != 0) {
+            string detalle = string.IsNullOrWhiteSpace(error) ? salida : error;
+            Console.WriteLine($"Error al agregar colaborador '{usuario}': {detalle}");
+            return false;
+        }
+
+        return true;
+    }
+
+    public List<string> ListarColaboradores() {
+        (string salida, string error, int codigoSalida) = EjecutarGh(new[] {
+            "api", $"repos/{owner}/{repo}/collaborators", "--jq", ".[] | select(.permissions.push == true) | .login"
+        });
+
+        if (codigoSalida != 0) {
+            string detalle = string.IsNullOrWhiteSpace(error) ? salida : error;
+            Console.WriteLine($"Error al listar colaboradores: {detalle}");
+            return new List<string>();
+        }
+
+        return LeerLineas(salida);
+    }
+
+    public List<string> ListarInvitacionesPendientes() {
+        (string salida, string error, int codigoSalida) = EjecutarGh(new[] {
+            "api", $"repos/{owner}/{repo}/invitations", "--paginate", "--jq", ".[].invitee.login"
+        });
+
+        if (codigoSalida != 0) {
+            string detalle = string.IsNullOrWhiteSpace(error) ? salida : error;
+            Console.WriteLine($"Error al listar invitaciones pendientes: {detalle}");
+            return new List<string>();
+        }
+
+        return LeerLineas(salida);
+    }
+
+    (string Salida, string Error, int CodigoSalida) EjecutarGh(IEnumerable<string> argumentos) {
+        ProcessStartInfo startInfo = new ProcessStartInfo { FileName = "gh", RedirectStandardOutput = true, RedirectStandardError = true };
+        
+        foreach (string argumento in argumentos) {
+            startInfo.ArgumentList.Add(argumento);
+        }
+
+        using Process proceso = Process.Start(startInfo)
+            ?? throw new InvalidOperationException("No se pudo iniciar gh.");
+
+        string salida = proceso.StandardOutput.ReadToEnd().Trim();
+        string error  = proceso.StandardError.ReadToEnd().Trim();
+ 
+        proceso.WaitForExit();
+
+        return (salida, error, proceso.ExitCode);
+    }
+
+    static List<string> LeerLineas(string texto) {
+        return texto.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(linea => linea.Trim())
+                    .Where(linea => !string.IsNullOrWhiteSpace(linea))
+                    .ToList();
+    }
+}
+
+
 class Program {
 
+    static void MensajeGithubErroneo(){
+        var alumnos = AlumnosManager.CargarAlumnos("alumnos.md");
+        foreach (var comision in new[] { "C7", "C9" }) {
+            var lista = alumnos.ConGithub(true).EnComision(comision).ConPractico(1, Estado.Revision);
+            if(lista.Count == 0) { continue; }
+            Console.WriteLine("""
+            *GitHub Erroreos ⁉️*
+            
+            Estos alumnos me informaron un usuario pero no los encuentro en de GitHub.
+
+            Podria ser que haya un error de tipeo o de carga. 
+            Si es así, por favor envien el usuario correcto junto con su legajo para que los autorice a publicar el trabajo práctico.
+
+            ```
+            """);
+            foreach(var a in lista) {
+                Console.WriteLine($"{a.Legajo}: {a.NombreCompleto,20} {a.GitHub}");
+            }
+
+            Console.WriteLine("""
+            Envien el usuario correcto junto con su legajo por este grupo
+
+            """);
+        }
+    }
     
+    static void MensajeSinGithub(){
+        var alumnos = AlumnosManager.CargarAlumnos("alumnos.md");
+        foreach (var comision in new[] { "C7", "C9" }) {
+            var lista = alumnos.ConGithub(false).EnComision(comision);
+            if(lista.Count == 0) { continue; }
+            Console.WriteLine("""
+            *Sin Usuario GitHub ❓❓*
+            
+            Los siguientes alumnos no me informaron cual es su usuario en GitHub.
+            Es necesario que tengan un usuario de GitHub para poder publicar el trabajo práctico y que yo pueda corregirlo.
+
+            ```
+            """);
+
+            foreach(var a in lista) {
+                Console.WriteLine($"{a.Legajo}: {a.NombreCompleto}");
+            }
+
+            Console.WriteLine("""
+            Envien el usuario junto con su legajo por este grupo 
+
+            p.e "63241 josias57455"
+
+            """);
+        }
+    }
+
     static void Main(string[] args) {
         Alumnos alumnos = AlumnosManager.CargarAlumnos( "alumnos.md");
-        alumnos[2].Practico(3, Estado.Aprobado);
-        alumnos[2].Examen(5, Estado.Desaprobado);
 
-        alumnos[10].Practico(5, Estado.EnProgreso);   
-        AlumnosManager.Listar(alumnos);
+        foreach(var a in alumnos.ConGithub()){
+            a.Practico(1, Estado.Revision);
+        }
+        foreach(var a in alumnos.ConGithub(false)){
+            a.Practico(1, Estado.Desaprobado);
+        }
+
+        // alumnos[10].Practico(5, Estado.EnProgreso);   
+        // AlumnosManager.Listar(alumnos);
         AlumnosManager.Guardar(alumnos, "alumnos.md");
+        // AlumnosManager.Listar(alumnos.ConFotos(false), "Alumnos sin foto");
         // AlumnosManager.ActualizarDesdePerfiles(alumnos, "../material-docente/perfil/perfiles");
         // // AlumnosManager.Guardar(alumnos, "alumnos.md");
         // // AlumnosManager.GuardarJSON(alumnos, "alumnos.json");
@@ -1211,7 +1569,6 @@ class Program {
         // // AlumnosManager.Guardar(sinGitHub, "alumnos-sin-github.md");
 
 
-        // WAppService wapp = new WAppService();
         // Console.WriteLine("Enviando mensaje al grupo de WhatsApp...");
 
         // Alumnos alumnosConTelefonoComision7 = alumnos.EnComision("C7").SinTelefono();
@@ -1228,6 +1585,47 @@ class Program {
         // // AlumnosManager.GuardarVCard(alumnos.ParaAgregar().EnComision("C9"), "alumnos-agregar-c9.vcf");
         // // wapp.InvitarGrupoComision(alumnos.ParaAgregar());
         // AlumnosManager.CopiarEnunciadoPracticos(alumnos, "tp1");
+        GitHub gh = new GitHub();
+
+        // var C7 = [63415, 63456, 63268, 63402, 63419, 63776, 63399, 63211, 63350, 61581, 63647, 63420, 63354, 63393, 63208, 63387, 63547, 63447, 61490, 63397, 63696];
+        // var C9 = [63385, 63217, 63313, 63222, 61801, 63150, 63461, 64016, 61641, 63737, 61057, 63717, 61161, 62844, 63231, 63425, 61907, 63219, 63297, 63388, 63494, 63418, 63412, 63205, 63220, 63232, 63216, 61026];
+        // var pedidos = C7 + C9;
+
+        var colaboradores = gh.ListarColaboradores();
+        var invitaciones  = gh.ListarInvitacionesPendientes();
+        foreach(var a in alumnos) {
+            if(a.ConGithub) {
+                var usuario = a.GitHub;
+                if(colaboradores.Contains(usuario, StringComparer.OrdinalIgnoreCase)) {
+                    Console.WriteLine($"🟢: {a.GitHub}");
+                    a.Practico(1, Estado.Aprobado);
+                } else if(invitaciones.Contains(usuario, StringComparer.OrdinalIgnoreCase)) {
+                    Console.WriteLine($"🟡: {a.GitHub}");
+                    a.Practico(1, Estado.Pendiente);
+                } else if(gh.AgregarColaborador(a.GitHub)) {
+                    Console.WriteLine($"⚪: {a.GitHub}");
+                    a.Practico(1, Estado.Vacio);
+                } else {
+                    Console.WriteLine($"🟠: {a.GitHub}");
+                    a.Practico(1, Estado.Revision);
+                }
+            } else {
+                Console.WriteLine($"🔴: {a.GitHub}");
+                a.Practico(1, Estado.Desaprobado);
+            }
+        }
+
+        AlumnosManager.Guardar(alumnos, "alumnos.md");
+        
+        MensajeSinGithub();
+        // MensajeGithubErroneo();
+
+
+        // WAppService wapp = new WAppService();
+        // foreach(var p in wapp.ListarParticipantesGrupo("TUP26-P3-C7")) {
+        //     Console.WriteLine($"Participante del grupo C7: {p.Name} | {p.PhoneNumber} | {p.Jid}");
+        // }
+// 
     }
 }
 
