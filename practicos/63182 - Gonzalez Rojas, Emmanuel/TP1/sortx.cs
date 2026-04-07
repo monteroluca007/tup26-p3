@@ -89,9 +89,9 @@ string LeerEntrada(AppConfig config)
 }
 
 //Parseo de datos sin ordenar
-(List<Dictionary<string, string>>, List<string>) ParsearDelimitado(string texto, AppConfig config)
+(List<Dictionary<string, string>> Filas, List<string> Encabezados) ParsearDelimitado(string texto, AppConfig config)
 {
- var lineas = new List<string>();
+    var lineas = new List<string>();
 
     foreach (var l in texto.Split('\n'))
     {
@@ -99,30 +99,48 @@ string LeerEntrada(AppConfig config)
         if (!string.IsNullOrWhiteSpace(limpia))
             lineas.Add(limpia);
     }
-     
-     
-     var encabezados = new List<string>();
-    var partes = Separar(lineas[0], config.Delimiter);
 
-    foreach (var p in partes)
-        encabezados.Add(p);
-        
-        
-  var filas = new List<Dictionary<string, string>>();
+    if (lineas.Count == 0)
+        throw new Exception("Archivo vacío");
 
-      for (int i = 1; i < lineas.Count; i++)
+    List<string> encabezados = new List<string>();
+
+    if (!config.NoHeader)
+    {
+        var partes = Separar(lineas[0], config.Delimiter);
+        foreach (var p in partes)
+            encabezados.Add(p.Trim());
+
+        lineas.RemoveAt(0);
+    }
+    else
+    {
+        var partes = Separar(lineas[0], config.Delimiter);
+        for (int i = 0; i < partes.Length; i++)
+            encabezados.Add(i.ToString());
+    }
+
+    var filas = new List<Dictionary<string, string>>();
+
+    foreach (var linea in lineas)
+    {
+        var valores = Separar(linea, config.Delimiter);
+        var fila = new Dictionary<string, string>();
+
+        for (int i = 0; i < encabezados.Count; i++)
         {
-            var valores = Separar(lineas[i], config.Delimiter);
-            var fila = new Dictionary<string, string>();
-
-            for (int j = 0; j < encabezados.Count; j++)
-                fila[encabezados[j]] = valores[j];
-
-            filas.Add(fila);
+            if (i < valores.Length)
+                fila[encabezados[i]] = valores[i].Trim();
+            else
+                fila[encabezados[i]] = "";
         }
 
-   return (filas, encabezados);
+        filas.Add(fila);
+    }
+
+    return (filas, encabezados);
 }
+
 
 string[] Separar(string linea, string delimitador)
 {
