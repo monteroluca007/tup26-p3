@@ -45,4 +45,29 @@ AppConfig ParseArgs(string[] a){
     }
     return new AppConfig(inputFile, outputFile, delim, noHeader, fields);
 }
+string ReadInput(AppConfig cfg){
+    try{
+        return cfg.InputFile == null ? Console.In.ReadToEnd() : File.ReadAllText(cfg.InputFile);
+    } catch(Exception ex){
+        ExitWithError("error leyendo entrada: " + ex.Message);
+        return "";
+    }
+}
 
+(string[] header, List<string[]> rows) ParseDelimited(string text, string delim, bool noHeader){
+    text = text.Replace("\r\n","\n").Replace("\r","\n");
+    var lines = text.Split('\n', StringSplitOptions.None).ToList();
+    if(lines.Count>0 && lines[^1]=="") lines.RemoveAt(lines.Count-1);
+    if(lines.Count==0) return (Array.Empty<string>(), new List<string[]>());
+    var first = lines[0].Split(new[]{delim}, StringSplitOptions.None);
+    int cols = first.Length;
+    var rows = new List<string[]>();
+    string[] header;
+    if(noHeader){
+        header = Enumerable.Range(0,cols).Select(i=>i.ToString()).ToArray();
+        rows.Add(Pad(first, cols));
+    } else header = first;
+    for(int i=1;i<lines.Count;i++) rows.Add(Pad(lines[i].Split(new[]{delim}, StringSplitOptions.None), cols));
+    return (header, rows);
+}
+string[] Pad(string[] a,int n){ if(a.Length==n) return a; var r=new string[n]; Array.Copy(a,r,Math.Min(a.Length,n)); for(int i=a.Length;i<n;i++) r[i]=""; return r; }
