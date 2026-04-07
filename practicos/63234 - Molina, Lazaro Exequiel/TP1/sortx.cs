@@ -71,3 +71,26 @@ string ReadInput(AppConfig cfg){
     return (header, rows);
 }
 string[] Pad(string[] a,int n){ if(a.Length==n) return a; var r=new string[n]; Array.Copy(a,r,Math.Min(a.Length,n)); for(int i=a.Length;i<n;i++) r[i]=""; return r; }
+
+void SortRows(List<string[]> rows, string[] header, List<SortField> sortFields){
+    if(sortFields.Count==0) return;
+    var rules = new List<(int idx,bool num,bool desc)>();
+    foreach(var sf in sortFields){
+        int idx = Array.IndexOf(header, sf.Name);
+        if(idx<0){ if(int.TryParse(sf.Name, out var ni) && ni>=0 && ni<header.Length) idx=ni; else ExitWithError($"columna no encontrada: {sf.Name}"); }
+        rules.Add((idx, sf.Numeric, sf.Descending));
+    }
+    rows.Sort((a,b)=>{
+        foreach(var (idx,num,desc) in rules){
+            var va = a[idx] ?? ""; var vb = b[idx] ?? "";
+            int cmp;
+            if(num){
+                var okA = double.TryParse(va, NumberStyles.Any, CultureInfo.InvariantCulture, out var na);
+                var okB = double.TryParse(vb, NumberStyles.Any, CultureInfo.InvariantCulture, out var nb);
+                cmp = (okA && okB) ? na.CompareTo(nb) : StringComparer.CurrentCulture.Compare(va, vb);
+            } else cmp = StringComparer.CurrentCulture.Compare(va, vb);
+            if(cmp!=0) return desc ? -cmp : cmp;
+        }
+        return 0;
+    });
+}
