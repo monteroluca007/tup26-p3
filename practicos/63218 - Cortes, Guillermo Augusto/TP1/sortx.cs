@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
+
 
 try
 {
@@ -80,6 +83,7 @@ AppConfig ParseArgs(string[] args)
                 break;
         }
     }
+    
 
     // Posicionales
     if (positionals.Count > 0 && input == null)
@@ -114,6 +118,44 @@ Ejemplos:
   sortx empleados.csv -b apellido
   sortx empleados.csv -b salario:num:desc
 ");
+}
+string ReadInput(AppConfig config)
+{
+    // Si hay archivo → leer archivo
+    if (!string.IsNullOrEmpty(config.InputFile))
+    {
+        if (!File.Exists(config.InputFile))
+            throw new Exception($"Archivo no encontrado: {config.InputFile}");
+
+        return File.ReadAllText(config.InputFile);
+    }
+
+    // Si no hay archivo → leer stdin
+    if (!Console.IsInputRedirected)
+        throw new Exception("No se especificó archivo de entrada ni hay datos en stdin");
+
+    using var reader = Console.In;
+    return reader.ReadToEnd();
+}
+
+List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
+{
+    return new();
+}
+
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    return rows;
+}
+
+string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    return "";
+}
+
+void WriteOutput(string output, AppConfig config)
+{
+    Console.WriteLine(output);
 }
 
 // PARSE SORT FIELD
