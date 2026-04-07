@@ -5,7 +5,7 @@
 ---
 
 ## ¿Qué vamos a construir?
-
+ 
 Una herramienta llamada **`sumx`** que lee un archivo CSV, calcula la suma de las columnas que se indiquen, y genera un reporte.
 
 ```
