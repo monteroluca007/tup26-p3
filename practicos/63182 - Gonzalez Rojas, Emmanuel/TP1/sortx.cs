@@ -67,6 +67,17 @@ AppConfig ParsearArgumentos(string[] args)
 
     return new AppConfig(archivoEntrada, archivoSalida, delimitador, sinEncabezado, camposOrden);
 }
+//Parseo de campo de ordenamiento
+SortField ParsearCampoOrden(string expresion)
+{
+    var partes = expresion.Split(':');
+
+    string nombre = partes[0];
+    bool esNumerico = partes.Length > 1 && partes[1] == "num";
+    bool descendente = partes.Length > 2 && partes[2] == "desc";
+
+    return new SortField(nombre, esNumerico, descendente);
+}
 
 //LECTURA de archivos de entrada
 string LeerEntrada(AppConfig config)
