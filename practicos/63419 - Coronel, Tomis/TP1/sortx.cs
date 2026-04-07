@@ -9,9 +9,13 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 
-record SortField(string Name, bool Numeric, bool Descending);
-record AppConfig(string? InputFile, string? OutputFile, string Delimiter, bool NoHeader, List<SortField> SortFields);
+
+
+record CampoOrden(string nombre , bool EsNumerico , bool Descendente);
+record configuracion ( String? ArchivoEntrada, string? ArchivoSalida, string delimitador, bool SinEncabezado, List<CampoOrden>Campos);
+
 
 class Program
 {
@@ -20,11 +24,11 @@ class Program
         try
         {
             var config = ParseArgs(args);
-            var texto = ReadInput(config);
-            var (header, filas) = ParseDelimited(config, texto);
-            var ordenadas = SortRows(config, header, filas);
-            var salida = Serialize(config, header, ordenadas);
-            WriteOutput(config, salida);
+            var texto = LeerEntrada(config);
+            var (encabezado, filas) = Parsear(config, texto);
+            var FilasOrdenadas = Ordenar(config, encabezado, filas);
+            var salida = Serializar(config, encabezado, FilasOrdenadas);
+            WriteOutput(config, salida);  
             return 0;
         }
         catch (Exception e)
@@ -33,11 +37,93 @@ class Program
             return 1;
         }
     }
+     
+     
+     
+     configuracion parseArgs(string[] args)
+     {
+        string? archivoEntrada = null;
+        string? archivoSalida = null;
+        string delimitador = ",";
+        bool sinEncabezado = false;
+        List<CampoOrden> campos = new List<CampoOrden>();
 
-    static AppConfig? ParseArgs(string[] args) { return null; }
-    static string ReadInput(AppConfig config) { return ""; }
-    static (List<string>, List<List<string>>) ParseDelimited(AppConfig config, string texto) { return (new List<string>(), new List<List<string>>()); }
-    static List<List<string>> SortRows(AppConfig config, List<string> header, List<List<string>> filas) { return filas; }
-    static string Serialize(AppConfig config, List<string> header, List<List<string>> filas) { return ""; }
-    static void WriteOutput(AppConfig config, string texto) { }
-}
+        int i = 0;
+        while (i < args.Length)
+        {
+            string arg = args[i];
+
+            if (arg == "-h"  || arg ==  "--help" )
+            {
+                Console.WriteLine("uso: sortx [entrada [salida]] [-b|--by campo[:tipo[:orden]]]... [-i|--input input] [-o|--output output] [-d|--delimiter delimitador] [-nh|--no-header] [-h|--help]");
+                Environment.Exit(0);
+            }
+        
+            else if (arg == "-i" || arg == "--input")
+        {
+            i++;
+            entrada = args[i];
+        }
+        else if (arg == "-o" || arg == "--output")
+        {
+            i++;
+            salida = args[i];
+        }
+        else if (arg == "-d" || arg == "--delimiter")
+        {
+            i++;
+            delimitador = args[i];
+            if (delimitador == "\\t") delimitador = "\t";
+        }
+        else if (arg == "-nh" || arg == "--no-header")
+        {
+            sinEncabezado = true;
+        }
+        else if (arg == "-b" || arg == "--by")
+        {
+            i++;
+            string[] partes = args[i].Split(':');
+
+            string nombre = partes[0];
+            bool numerico = false;
+            bool descendente = false;
+
+            if (partes.Length > 1 && partes[1] == "num")
+                numerico = true;
+
+            if (partes.Length > 2 && partes[2] == "desc")
+                descendente = true;
+
+            campos.Add(new CampoOrden(nombre, numerico, descendente));
+        }
+        else
+        {
+            if (entrada == null) entrada = arg;
+            else if (salida == null) salida = arg;
+            else throw new Exception("Demasiados argumentos");
+        }
+
+        i++;
+    }
+
+
+
+
+
+
+        if (campos.Count == 0)
+            throw new Exception("Debe especificar al menos un campo de ordenamiento con -b o --by");
+        
+        
+           return new configuracion(archivoEntrada, archivoSalida, delimitador, sinEncabezado, campos);
+        }
+     
+     
+     
+     
+     
+     }
+
+
+
+
