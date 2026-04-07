@@ -88,6 +88,20 @@ string LeerEntrada(AppConfig config)
     return Console.In.ReadToEnd();
 }
 
+//Parseo de datos sin ordenar
+(List<Dictionary<string, string>>, List<string>) ParsearDelimitado(string texto, AppConfig config)
+{
+ var lineas = new List<string>();
+
+    foreach (var l in texto.Split('\n'))
+    {
+        var limpia = l.Trim('\r');
+        if (!string.IsNullOrWhiteSpace(limpia))
+            lineas.Add(limpia);
+    }
+}
+
+
 //MODELOS para configurar y ordenar
 
 record SortField(string Name, bool Numeric, bool Descending);
