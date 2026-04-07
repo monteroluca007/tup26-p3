@@ -99,11 +99,18 @@ string LeerEntrada(AppConfig config)
         if (!string.IsNullOrWhiteSpace(limpia))
             lineas.Add(limpia);
     }
+     
+     
      var encabezados = new List<string>();
     var partes = lineas[0].Split(',');
 
     foreach (var p in partes)
         encabezados.Add(p);
+        
+        
+      var filas = new List<Dictionary<string, string>>();
+
+   
 }
 
 
