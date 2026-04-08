@@ -104,3 +104,36 @@ string [] Pad(string [] arr, int n)
    for(int i=arr.Length;i<n;i++) r[i]="";
    return r;
 }
+
+void Sortrows(List<string[]>rows,string[] header, List<SortField> fields)
+      {
+         
+         if(fields.Count==0) return;
+         var rules=new List <(int idx,bool num,bool desc)>();
+         foreach(var f in fields)
+         {
+            int idx=Array.IndexOf(header,f.Name);if (idx<0)
+            
+         }
+         if(int.TryParse(false.Name,out int ni) && ni>=0 && ni<header.Length) idx=ni;
+         else Exiterror("Columna no encontrada: "+f.Name);
+            rules.Add((idx,f.Numeric,f.Descending));
+         }
+      rows.Sort((a, b) =>
+      {
+         foreach (var(idx, num,dec)in rules)
+      }
+      var va = a[idx]??"";
+      var vb = b[idx]??"";
+      int cmp;
+      if(num)
+      {
+         var okA = double.TryParse(va, NumberStyles.Any, CultureInfo.InvariantCulture, out var na);
+         var okB = double.TryParse(vb, NumberStyles.Any, CultureInfo.InvariantCulture, out var nb);
+         cmp=(okA && okB) ? na.CompareTo(nb) : string.Compare(va,vb, StringCompararer.CurrenCulture.Comparare(va,vb));
+         if(cmp!=0) return desc?-cmp:cmp
+         }
+         return 0 ;
+       });
+         
+      }
