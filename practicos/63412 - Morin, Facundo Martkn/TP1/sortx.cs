@@ -184,6 +184,14 @@ string Serialize(
     return result;
 }
 
+void WriteOutput(string text, AppConfig cfg)
+{
+    if (cfg.OutputFile != null)
+        File.WriteAllText(cfg.OutputFile, text);
+    else
+        Console.Write(text);
+}
+
 }
 catch (Exception ex)
 {
