@@ -190,7 +190,6 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
 
         return sb.ToString();
     }
-
 void WriteOutput(string content, AppConfig config)
 {
     if (!string.IsNullOrEmpty(config.OutputFile))
