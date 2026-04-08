@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 
 try
@@ -64,7 +65,14 @@ AppConfig ParseArgs(string[] args)
 
 string ReadInput(AppConfig config)
 {
-    return "";
+    if (config.InputFile != null)
+    {
+        return File.ReadAllText(config.InputFile);
+    }
+    else
+    {
+        return Console.In.ReadToEnd();
+    }
 }
 
 List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
