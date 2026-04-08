@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 record SortField(string Name, bool Numeric, bool Descending);
 
@@ -50,10 +51,17 @@ class Program
     );
 }
 
-    static string ReadInput(AppConfig config)
+   static string ReadInput(AppConfig config)
+{
+    if (!string.IsNullOrEmpty(config.InputFile))
     {
-        return "";
+        return File.ReadAllText(config.InputFile);
     }
+    else
+    {
+        return Console.In.ReadToEnd();
+    }
+}
 
     static List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
     {
