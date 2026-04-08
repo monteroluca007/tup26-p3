@@ -54,3 +54,11 @@ AppConfig ParseArgs(string[] arguments)
 
     return new AppConfig(inputFile, outputFile, delimiter, noHeader, sortFields);
 }
+string ReadInput(AppConfig config)
+{
+    if (string.IsNullOrEmpty(config.InputFile))
+    {
+        return Console.In.ReadToEnd();
+    }
+    return File.ReadAllText(config.InputFile);
+}
