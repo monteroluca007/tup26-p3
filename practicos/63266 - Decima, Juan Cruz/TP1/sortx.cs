@@ -86,6 +86,20 @@ AppConfig ParsearArgumentos(string[] args)
 }
 
 
+SortField ParsearCampoOrden(string especificacion)
+{
+    var partes = especificacion.Split(':');
+
+    string nombre = partes[0];
+
+    bool esNumerico = partes.Length > 1 && partes[1] == "num";
+    bool descendente = partes.Length > 2 && partes[2] == "desc";
+
+    return new SortField(nombre, esNumerico, descendente);
+}
+
+
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
