@@ -10,6 +10,9 @@ try
     Console.WriteLine($" > Salida:  {config.OutputFile ?? "(pantalla/stdout)"}");
     Console.WriteLine($" > Separador: '{config.Delimiter}'");
     Console.WriteLine($" > Reglas de orden: {config.SortFields.Count}");
+    string textoCrudo = ReadInput(config);
+    Console.WriteLine("Lectura exitosa.");
+    Console.WriteLine($" > Caracteres leídos: {textoCrudo.Length}");
 }
 catch (Exception ex)
 {
@@ -95,6 +98,27 @@ AppConfig ParseArgs(string[] argumentos)
         Console.WriteLine("  -nh, --no-header");
         Console.WriteLine("  -h, --help");
     }
+}
+string ReadInput(AppConfig config)
+{
+    // Se pasó una ruta de archivo
+    if (!string.IsNullOrEmpty(config.InputFile))
+    {
+        if (!File.Exists(config.InputFile))
+        {
+            throw new FileNotFoundException($"No pude encontrar el archivo: {config.InputFile}");
+        }
+        return File.ReadAllText(config.InputFile);
+    }
+    
+    // No se paso un archivo, pero si datos de consola
+    if (Console.IsInputRedirected)
+    {
+        return Console.In.ReadToEnd();
+    }
+    
+    // No paso nada para leer
+    throw new InvalidOperationException("No se pasó ningún archivo ni datos para leer.");
 }
 
 //Modelo de Datos
