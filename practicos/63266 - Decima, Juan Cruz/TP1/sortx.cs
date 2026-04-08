@@ -135,15 +135,52 @@ string LeerEntrada(AppConfig config)
     return (filas, encabezados);
 }
 
+List<string[]> OrdenarFilas(List<string[]> filas, string[]? encabezados, AppConfig config)
+{
+    if (config.SortFields.Count == 0)
+        return filas;
 
+    filas.Sort((a, b) =>
+    {
+        foreach (var campo in config.SortFields)
+        {
+            int indice = ObtenerIndiceCampo(campo.Name, encabezados);
+
+            string valorA = a[indice];
+            string valorB = b[indice];
+
+            int comparacion;
+
+            if (campo.Numeric)
+            {
+                double numA = double.Parse(valorA);
+                double numB = double.Parse(valorB);
+                comparacion = numA.CompareTo(numB);
+            }
+            else
+            {
+                comparacion = string.Compare(valorA, valorB, StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (comparacion != 0)
+            {
+                return campo.Descending ? -comparacion : comparacion;
+            }
+        }
+
+        return 0;
+    });
+
+    return filas;
+}   
 
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
-    string?         InputFile,
-    string?         OutputFile,
-    string          Delimiter,
-    bool            NoHeader,
+    string? InputFile,
+    string? OutputFile,
+    string Delimiter,
+    bool NoHeader,
     List<SortField> SortFields
 );
 
