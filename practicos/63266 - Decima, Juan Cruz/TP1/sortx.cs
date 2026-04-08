@@ -99,6 +99,19 @@ SortField ParsearCampoOrden(string especificacion)
 }
 
 
+string LeerEntrada(AppConfig config)
+{
+    if (config.InputFile != null)
+    {
+        return File.ReadAllText(config.InputFile);
+    }
+    else
+    {
+        return Console.In.ReadToEnd();
+    }
+}
+
+
 
 record SortField(string Name, bool Numeric, bool Descending);
 
