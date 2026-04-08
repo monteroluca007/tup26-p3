@@ -30,6 +30,76 @@ AppConfig parseargs(string[] args)
     
 
     for (int i = 0; i < args.Length; i++)
+    {
+        string arg = args[i];
+
+        if (arg == "--help" || arg == "-h")
+        
+            showHelp = true;
+            continue;
+        
+
+        if (arg == "--no-header" || arg == "-nh")
+        {
+            noHeader = true;
+            continue;
+        
+
+        if (arg == "--by" || arg == "-b")
+        {
+            if (i + 1 >= args.Length)
+                throw new ArgumentException($"necesita '{arg}' un valor.");
+
+            sortFields.Add(ParseSortField(args[++i]));
+            continue;
+        
+
+        if (arg == "--input" || arg == "-i")
+        {
+            if (i + 1 >= args.Length)
+                throw new ArgumentException($"necesita '{arg}' un valor.");
+
+            inputFile = args[++i];
+            continue;
+        }
+
+        if (arg == "--output" || arg == "-o")
+        {
+            if (i + 1 >= args.Length)
+                throw new ArgumentException($"necesita '{arg}' un valor.");
+
+            outputFile = args[++i];
+            continue;
+        }
+
+        if (arg == "--deLimiter" || arg == "-d")
+        
+            if (i + 1 >= args.Length)
+                throw new ArgumentException($"necesita '{arg}' un valor.");
+
+            string raw = args[++i];
+            deLimiter = raw == @"\t" ? "\t" : raw;
+            continue;
+        }
+
+        if (!arg.StartsWith("-"))
+        
+            if (positional == 0) { inputFile = arg; positional++; }
+            else if (positional == 1) { outputFile = arg; positional++; }
+            else throw new ArgumentException($"arg posicional inexistente: '{arg}'.");
+            continue;
+        }
+
+        throw new ArgumentException($"opción desconocida: '{arg}'.");
+    }
+
+    return new AppConfig(inputFile, outputFile, delimiter, noHeader, showHelp, sortFields);
+
+
+
+
+
+
 
  //commit 1
 record SortField(string Name, bool Numeric, bool Descending);
