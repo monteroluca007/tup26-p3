@@ -95,6 +95,40 @@ string ReadInput(AppConfig cfg)
     return Console.In.ReadToEnd();
 }
 
+(List<Dictionary<string, string>>, string[]?) ParseDelimited(string text, AppConfig cfg)
+{
+    var lines = text.Replace("\r", "").Split('\n');
+
+    List<Dictionary<string, string>> rows = new();
+    string[]? headers = null;
+
+    int start = 0;
+
+    if (!cfg.NoHeader)
+    {
+        headers = lines[0].Split(cfg.Delimiter);
+        start = 1;
+    }
+
+    for (int i = start; i < lines.Length; i++)
+    {
+        if (lines[i] == "") continue;
+
+        var values = lines[i].Split(cfg.Delimiter);
+        var row = new Dictionary<string, string>();
+
+        for (int j = 0; j < values.Length; j++)
+        {
+            string key = cfg.NoHeader ? j.ToString() : headers[j];
+            row[key] = values[j];
+        }
+
+        rows.Add(row);
+    }
+
+    return (rows, headers);
+}
+
 }
 catch (Exception ex)
 {
