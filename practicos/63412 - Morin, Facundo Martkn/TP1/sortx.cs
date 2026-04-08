@@ -16,7 +16,7 @@ try
         string? outputFile = null;
         string delimiter = ",";
         bool noHeader = false;
-        bool showHelp = false;
+        bool ShowHelp = false;
         List<SortField> sortFields = new();
         int positional = 0;
 
@@ -35,7 +35,7 @@ try
 
             if (arg == "--help" || arg == "-h")
             {
-                showHelp = true;
+                ShowHelp = true;
                 continue;
             }
             if (arg == "--no-header" || arg == "-nh")
@@ -192,7 +192,7 @@ void WriteOutput(string text, AppConfig cfg)
         Console.Write(text);
 }
 
-void showHelp()
+void ShowHelp()
 {
     Console.WriteLine("Uso: sortx [input [output]] [-b|--by campo[:tipo[:orden]]]... [-i|--input input] [-o|--output output] [-d|--delimiter delimitador] [-nh|--no-header] [-h|--help]");
     Console.WriteLine("Opciones:");
@@ -204,6 +204,19 @@ void showHelp()
     Console.WriteLine("  -h, --help                      Muestra esta ayuda.");
 }
 
+var config = ParseArgs(args);
+
+if (config.ShowHelp)
+{
+    ShowHelp();
+    return;
+}
+
+var rawText = ReadInput(config);
+var (rows, headers) = ParseDelimited(rawText, config);
+var sortedRows = SortRows(rows, config.SortFields);
+var output = Serialize(sortedRows, headers, config);
+WriteOutput(output, config);
 
 }
 catch (Exception ex)
@@ -223,5 +236,6 @@ record AppConfig(
     string?         OutputFile,
     string          Delimiter,
     bool            NoHeader,
+    bool            ShowHelp,
     List<SortField> SortFields
 );
