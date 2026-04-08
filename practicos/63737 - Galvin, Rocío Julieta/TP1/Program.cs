@@ -112,6 +112,24 @@ void ShowHelp()
     Console.WriteLine("  -h, --help      Mostrar ayuda");
 }
 
+string ReadInput(AppConfig config)
+{
+    // si hay archivo → leer archivo
+    if (!string.IsNullOrEmpty(config.InputFile))
+    {
+        if (!File.Exists(config.InputFile))
+            throw new Exception($"Archivo no encontrado: {config.InputFile}");
+
+        return File.ReadAllText(config.InputFile);
+    }
+
+    // si no hay archivo → leer stdin
+    if (!Console.IsInputRedirected)
+        throw new Exception("No se especificó archivo de entrada ni hay datos en stdin");
+
+    using var reader = Console.In;
+    return reader.ReadToEnd();
+}
 
 SortField ParseSortField(string spec)
 {
