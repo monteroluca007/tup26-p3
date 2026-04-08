@@ -40,15 +40,34 @@ AppConfig ParseArgs(string[] args)
             ShowHelp();
             Environment.Exit(0);
         }
+        else if (a == "-i" || a == "--input")
+        {
+            if (i + 1 >= args.Length)
+            {
+                throw new Exception("Falta archivo después de -i");
+            }
+
+            input = args[i + 1];
+            i++;
+        }
+        else if (a == "-o" || a == "--output")
+        {
+            if (i + 1 >= args.Length)
+            {
+                throw new Exception("Falta archivo después de -o");
+            }
+
+            output = args[i + 1];
+            i++;
+        }
         else if (a == "-b" || a == "--by")
         {
             if (i + 1 >= args.Length)
             {
-                throw new Exception("Falta el campo despues de -b o --by");
+                throw new Exception("Falta el campo después de -b");
             }
 
-            var textoCampo = args[i + 1];
-            var partes = textoCampo.Split(':');
+            var partes = args[i + 1].Split(':');
 
             var nombre = partes[0];
             var numeric = false;
@@ -56,34 +75,16 @@ AppConfig ParseArgs(string[] args)
 
             if (partes.Length >= 2)
             {
-                if (partes[1] == "num")
-                {
-                    numeric = true;
-                }
-                else if (partes[1] == "alpha")
-                {
-                    numeric = false;
-                }
-                else
-                {
-                    throw new Exception("Tipo de orden invalido. Use alpha o num.");
-                }
+                if (partes[1] == "num") numeric = true;
+                else if (partes[1] == "alpha") numeric = false;
+                else throw new Exception("Tipo inválido");
             }
 
             if (partes.Length >= 3)
             {
-                if (partes[2] == "desc")
-                {
-                    descending = true;
-                }
-                else if (partes[2] == "asc")
-                {
-                    descending = false;
-                }
-                else
-                {
-                    throw new Exception("Orden invalido. Use asc o desc.");
-                }
+                if (partes[2] == "desc") descending = true;
+                else if (partes[2] == "asc") descending = false;
+                else throw new Exception("Orden inválido");
             }
 
             sortFields.Add(new SortField(nombre, numeric, descending));
@@ -272,7 +273,14 @@ string Serialize(
 
 void WriteOutput(AppConfig config, string text)
 {
-    Console.Write(text);
+    if (config.OutputFile != null)
+    {
+        File.WriteAllText(config.OutputFile, text);
+    }
+    else
+    {
+        Console.Write(text);
+    }
 }
 
 void ShowHelp()
