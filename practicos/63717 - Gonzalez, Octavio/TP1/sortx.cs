@@ -1,7 +1,7 @@
 using System;
+
 using static System.Console;
-
-
+using System.IO;
 /*
 sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
       [-i|--input input] [-o|--output output]
@@ -45,10 +45,13 @@ Si el archivo de salida no se especifica, la herramienta debe escribir en stdout
 
 try
 {
+    /*parseargs  => reandinput => parsedelimited => sortrows => serialize => writeoutput
+      Obtener de consola => leer config => separar => ordenar => escribir => entregar 
+    */
 
-    AppConfig configuracion = ParseArgs(args); //args son los argumentos que me pasan por consola 
+    AppConfig configuracion = ParseArgs(args); //args ==> lo q pasa por consola 
     string texto = ReadInput(configuracion);
-    List<Dictionary<string, string>> filas = ParseDelimited(texto); //creo la lista diccionario y la igualo a la otra lista.
+    List<Dictionary<string, string>> filas = ParseDelimited(texto);
 }
 catch (Exception e)
 {
@@ -58,43 +61,60 @@ catch (Exception e)
 
 static AppConfig ParseArgs(string[] argumentos)
 {
-    string? entrada = null ; 
-    string? Salida = null; 
-    string Delimitador = ","; 
-    bool noheader = false; 
-    List<SortField> sortfields = new List<SortField>();
+    //configuracion
+    string? entrada = null;
+    string? Salida = null;
+    string Delimitador = "," ?? "\t" ?? "|";
+    bool noheader = false;
+    List<SortField> sortfields = [];
 
 
-     for (int i=0; i<argumentos.Length; i++) //va recorriendo todos los argumentos y hace las validaciones, si cumple, guarda lo que viene despues 
+
+    for (int i = 0; i < argumentos.Length; i++) /*recorre los argumentos, valida y guarda lo que viene despues */
     {
-        if (argumentos[i] == "-i") entrada=argumentos[i+1]; 
-        if (argumentos[i] == "-o") Salida=argumentos[i+1];
-        if (argumentos[i] == "-d") Delimitador=argumentos[i+1];
-        if (argumentos[i] == "-b")
+        if (argumentos[i] == "-i" || argumentos[i] == "--input")
         {
-            string[] partes= argumentos[++i].Split(':');
+            entrada = argumentos[++i];
+        }
+        else if (argumentos[i] == "-o" || argumentos[i] == "--output") Salida = argumentos[++i];
+        else if (argumentos[i] == "-d" || argumentos[i] == "--delimiter") Delimitador = argumentos[++i];
+        else if (argumentos[i] == "-nh" || argumentos[i] == "--no-header") noheader = true;
+        else if (argumentos[i] == "-b" || argumentos[i] == "--by")
+        {
+            string[] config = argumentos[++i].Split(':');
+            //Ordenamiento
+            bool num = false;
+            bool desc = false;
+            bool asc = true;//default 
+            bool alpha = true;//default
+            string campo = config[0];
 
-            string nombre = partes[0];
-            bool num=false;
-            bool desc=false;
-            bool asc=false;
-            for (int j=1; j<partes.Length; j++)
+            for (int j = 1; j < config.Length; j++)
             {
-                if (partes[j]=="num") num=true;
-                if (partes[j]=="desc") desc=true;
-                if (partes[j]=="asc") asc=true;
-            }
+                //cambia tipo
+                if (config[j] == "num") { num = true; alpha = false; }
+                
+                //orden
+                if (config[j] == "desc") {desc = true;asc = false; }
 
-            sortfields.Add(new SortField(nombre, num, desc, asc));
+            }
+            sortfields.Add(new SortField(campo, alpha, num, desc, asc));
 
         }
-        ;
-        if (argumentos[i] == "-nh") ;
-        if (argumentos[i] == "-h") ;
+        else if (argumentos[i] == "-h")
+        {
+            WriteLine("help (ayuda)");
+            WriteLine("sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...\n      [-i|--input input] [-o|--output output]\n      [-d|--delimiter delimitador]\n      [-nh|--no-header] [-h|--help]");
 
+            Environment.Exit(0);
+        }
+        else if (!argumentos[i].StartsWith("-")) // no comienza con - 
+        {
+            if (entrada == null) entrada = argumentos[i];
+            else if (Salida == null) Salida = argumentos[i];
+        }
     }
-     
-
+    return new AppConfig(entrada, Salida, Delimitador, noheader, sortfields);
 
 }
 ; //Retornara el record AppConfig la funcion es ParseArgs 
@@ -111,7 +131,7 @@ static string ReadInput(AppConfig configuracion) // Me lee las entradas detexto,
     }
 }
 
-record SortField(string nombre, bool num, bool desc, bool asc); // campo por el que ordena. 
+record SortField(string campo, bool alpha, bool num, bool desc, bool asc); // campo por el que ordena. 
 record AppConfig(string? Entrada, string? Salida, string Delimitador, bool noheader, List<SortField> sortfields);
 
 
