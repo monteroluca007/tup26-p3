@@ -215,3 +215,23 @@ List<Dictionary<string, string>> SortRows(
     sorted.Sort(CompareRows);
     return sorted;
 }
+
+string Serialize(
+    List<Dictionary<string, string>> rows,
+    string[]                         headers,
+    string                           delimiter,
+    bool                             noHeader)
+{
+    var sb = new System.Text.StringBuilder();
+
+    if (!noHeader)
+        sb.Append(string.Join(delimiter, headers)).Append('\n');
+
+    foreach (var row in rows)
+    {
+        IEnumerable<string> values = headers.Select(h => row.GetValueOrDefault(h, ""));
+        sb.Append(string.Join(delimiter, values)).Append('\n');
+    }
+
+    return sb.ToString();
+}
