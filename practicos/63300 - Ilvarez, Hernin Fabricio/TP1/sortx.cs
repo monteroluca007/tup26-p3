@@ -175,4 +175,50 @@ List<string[]> SortRows(List<string[]> rows, string[] header, AppConfig config)
 }
 
 
-//* 3° Funcion 
+//* 3° Funcion GetColumnIndex
+
+
+int GetColumnIndex(string name, string[] header, bool noHeader)
+{
+    if (noHeader)
+    {
+        if (int.TryParse(name, out int idx)) return idx;
+        throw new ArgumentException("Si no hay encabezado, el campo debe ser un índice numérico.");
+    }
+    
+    int index = Array.IndexOf(header, name);
+    if (index < 0) throw new ArgumentException($"La columna '{name}' no existe en el archivo.");
+    return index;
+}
+
+string Serialize(List<string[]> rows, string[] header, AppConfig config)
+{
+    var lines = new List<string>();
+    
+    if (!config.NoHeader && header.Length > 0)
+    {
+        lines.Add(string.Join(config.Delimiter, header));
+    }
+    
+    foreach (var row in rows)
+    {
+        lines.Add(string.Join(config.Delimiter, row));
+    }
+    
+    //* Agregamos un salto de línea al final por convención en archivos de texto
+    return string.Join(Environment.NewLine, lines) + Environment.NewLine;
+}
+
+//* 4° Funcion WriteOutput
+
+void WriteOutput(string output, AppConfig config)
+{
+    if (string.IsNullOrEmpty(config.OutputFile))
+    {
+        Console.Write(output);
+    }
+    else
+    {
+        File.WriteAllText(config.OutputFile, output);
+    }
+}
