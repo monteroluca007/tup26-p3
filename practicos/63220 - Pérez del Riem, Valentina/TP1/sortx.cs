@@ -173,3 +173,18 @@ SortField ParseSortField(string texto)
 
     return new SortField(nombre, esNumerico, esDescendente);
 }
+
+// 2. ReadInput
+
+string ReadInput(AppConfig config)
+{
+    if (config.InputFile != null)
+    {
+        if (!File.Exists(config.InputFile))
+            throw new Exception("No existe el archivo de entrada: " + config.InputFile);
+
+        return File.ReadAllText(config.InputFile);
+    }
+
+    return Console.In.ReadToEnd();
+}
