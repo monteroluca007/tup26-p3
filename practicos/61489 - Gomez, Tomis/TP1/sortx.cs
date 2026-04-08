@@ -68,10 +68,147 @@ Configuracion LeerArgumentos(string[] argumentos)
     return new Configuracion(entrada, salida, delim, noHeader, criterios);
 }
 
+string LeerEntrada(Configuracion config)
+{
+    if (config.ArchivoEntrada != null)
+    {
+        return File.ReadAllText(config.ArchivoEntrada);
+    }
 
-// sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
-//       [-i|--input input] [-o|--output output]
-//       [-d|--delimiter delimitador]
-//       [-nh|--no-header] [-h|--help]
+    return Console.In.ReadToEnd();
+}
 
-Console.WriteLine($"sortx {string.Join(" ", args)}");
+List<Dictionary<string, string>> ProcesarTexto(string texto, Configuracion config)
+{
+    var lineas = texto.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+    var listaResultante = new List<Dictionary<string, string>>();
+
+    if (lineas.Length == 0) return listaResultante;
+
+    string[] encabezados;
+    int indiceInicio = 0;
+
+    if (config.SinEncabezado)
+    {
+        string[] columnasFilaUno = lineas[0].Split(config.Delimitador);
+        encabezados = new string[columnasFilaUno.Length];
+        for (int i = 0; i < columnasFilaUno.Length; i++) encabezados[i] = i.ToString();
+    }
+    else
+    {
+        encabezados = lineas[0].Split(config.Delimitador);
+        indiceInicio = 1;
+    }
+
+    for (int i = indiceInicio; i < lineas.Length; i++)
+    {
+        string[] celdas = lineas[i].Split(config.Delimitador);
+        var filaDiccionario = new Dictionary<string, string>();
+
+        for (int j = 0; j < encabezados.Length; j++)
+        {
+            filaDiccionario[encabezados[j]] = j < celdas.Length ? celdas[j] : "";
+        }
+        listaResultante.Add(filaDiccionario);
+    }
+
+    if (!config.SinEncabezado)
+    {
+        var filaHeader = new Dictionary<string, string>();
+        foreach (var nombreColumna in encabezados)
+        {
+            filaHeader[nombreColumna] = nombreColumna;
+        }
+        listaResultante.Insert(0, filaHeader);
+    }
+
+    return listaResultante;
+}
+
+List<Dictionary<string, string>> OrdenarFilas(List<Dictionary<string, string>> filas, Configuracion config)
+{
+    if (config.Criterios.Count == 0 || filas.Count < 2) return filas;
+
+    Dictionary<string, string>? encabezadoGuardado = null;
+    var datosAOrdenar = new List<Dictionary<string, string>>();
+
+    if (!config.SinEncabezado)
+    {
+        encabezadoGuardado = filas[0];
+        for (int i = 1; i < filas.Count; i++) datosAOrdenar.Add(filas[i]);
+    }
+    else
+    {
+        foreach (var f in filas) datosAOrdenar.Add(f);
+    }
+
+    datosAOrdenar.Sort((a, b) =>
+    {
+        foreach (var criterio in config.Criterios)
+        {
+            if (!a.ContainsKey(criterio.Campo)) throw new Exception($"Campo '{criterio.Campo}' no encontrado.");
+
+            int comparacion = 0;
+            if (criterio.EsNumerico)
+            {
+                double numA = double.Parse(a[criterio.Campo]);
+                double numB = double.Parse(b[criterio.Campo]);
+                comparacion = numA.CompareTo(numB);
+            }
+            else
+            {
+                comparacion = string.Compare(a[criterio.Campo], b[criterio.Campo]);
+            }
+
+            if (comparacion != 0)
+            {
+                return criterio.EsDescendente ? -comparacion : comparacion;
+            }
+        }
+        return 0;
+    });
+
+    if (encabezadoGuardado != null) datosAOrdenar.Insert(0, encabezadoGuardado);
+
+    return datosAOrdenar;
+}
+
+string Serializar(List<Dictionary<string, string>> filas, Configuracion config)
+{
+    var sb = new StringBuilder();
+
+    foreach (var fila in filas)
+    {
+        var valoresFila = new List<string>();
+        foreach (var clave in fila.Keys)
+        {
+            valoresFila.Add(fila[clave]);
+        }
+
+        sb.AppendLine(string.Join(config.Delimitador, valoresFila));
+    }
+
+    return sb.ToString().TrimEnd();
+}
+
+void EscribirSalida(string contenido, Configuracion config)
+{
+    if (config.ArchivoSalida != null)
+    {
+        File.WriteAllText(config.ArchivoSalida, contenido);
+    }
+    else
+    {
+        Console.Write(contenido);
+    }
+}
+
+record CriterioOrden(string Campo, bool EsNumerico, bool EsDescendente);
+
+record Configuracion(
+    string? ArchivoEntrada,
+    string? ArchivoSalida,
+    string Delimitador,
+    bool SinEncabezado,
+    List<CriterioOrden> Criterios
+);
