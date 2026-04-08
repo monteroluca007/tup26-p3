@@ -175,6 +175,65 @@ ParseDelimited(string text, AppConfig config)
     return (headers, rows);
 }
 
+List<Dictionary<string, string>> SortRows(
+    List<Dictionary<string, string>> rows,
+    string[] headers,
+    AppConfig config)
+{
+    for (int i = 0; i < rows.Count - 1; i++)
+    {
+        for (int j = 0; j < rows.Count - i - 1; j++)
+        {
+            if (Compare(rows[j], rows[j + 1], config) > 0)
+            {
+                var temp = rows[j];
+                rows[j] = rows[j + 1];
+                rows[j + 1] = temp;
+            }
+        }
+    }
+
+    return rows;
+}
+
+int Compare(
+    Dictionary<string, string> a,
+    Dictionary<string, string> b,
+    AppConfig config)
+{
+    for (int i = 0; i < config.SortFields.Count; i++)
+    {
+        var f = config.SortFields[i];
+
+        if (!a.ContainsKey(f.Name))
+            throw new Exception($"Columna inexistente: {f.Name}");
+
+        string va = a[f.Name];
+        string vb = b[f.Name];
+
+        int result;
+
+        if (f.Numeric)
+        {
+            double na = 0, nb = 0;
+            double.TryParse(va, out na);
+            double.TryParse(vb, out nb);
+
+            result = na.CompareTo(nb);
+        }
+        else
+        {
+            result = string.Compare(va, vb);
+        }
+
+        if (result != 0)
+            return f.Descending ? -result : result;
+    }
+
+    return 0;
+}
+
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
