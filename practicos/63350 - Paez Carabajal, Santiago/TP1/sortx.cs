@@ -186,7 +186,7 @@ List<string[]> SortRows(List<string[]> rows, List<string> headers, AppConfig con
     return result;
 }
 
-//  PASO 5 
+//  PASO 5 serialización de datos
 
 string Serialize(List<string> headers, List<string[]> rows, AppConfig config)
 {
@@ -201,7 +201,7 @@ string Serialize(List<string> headers, List<string[]> rows, AppConfig config)
     return result;
 }
 
-//  PASO 6 
+//  PASO 6 salida a archivo o consola
 
 void WriteOutput(string? file, string content)
 {
