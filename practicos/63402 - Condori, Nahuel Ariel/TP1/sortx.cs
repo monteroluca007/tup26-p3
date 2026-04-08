@@ -4,21 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-try
-{
-    var config = ParseArgs(args);
-    if (config == null) return 0;
+record SortField(string Name, bool Numeric, bool Descending);
 
-    var rawText = ReadInput(config);
-    var rows = ParseDelimited(rawText, config, out var header);
-    var sortedRows = SortRows(rows, config);
-    var outputText = Serialize(sortedRows, config, header);
-    WriteOutput(outputText, config);
-
-    return 0;
-}
-catch (Exception ex)
-{
-    Console.Error.WriteLine($"Error: {ex.Message}");
-    return 1;
-}
+record AppConfig(
+    string? InputFile,
+    string? OutputFile,
+    string Delimiter,
+    bool NoHeader,
+    List<SortField> SortFields);
