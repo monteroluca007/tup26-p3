@@ -4,7 +4,8 @@
 //       [-d|--delimiter delimitador]
 //       [-nh|--no-header] [-h|--help]
 
-// Console.WriteLine($"sortx {string.Join(" ", args)}");
+Console.WriteLine($"sortx {string.Join(" ", args)}");
+
 
 record SortField(string Name, bool Numeric, bool Descending);
 
