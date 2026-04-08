@@ -245,3 +245,45 @@ void WriteOutput(string? filePath, string content)
     }
     File.WriteAllText(filePath, content);
 }
+
+void PrintHelp()
+{
+    Console.WriteLine("""
+        sortx — ordena filas de un archivo de texto delimitado
+
+        USO
+          sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
+                [-i|--input input] [-o|--output output]
+                [-d|--delimiter delim] [-nh|--no-header] [-h|--help]
+
+        OPCIONES
+          -b, --by campo[:tipo[:orden]]   Campo de ordenamiento. Repetible.
+                                          tipo : alpha (default) | num
+                                          orden: asc  (default) | desc
+          -i, --input  archivo            Archivo de entrada (o 1er posicional)
+          -o, --output archivo            Archivo de salida  (o 2do posicional)
+          -d, --delimiter delim           Carácter delimitador (default: ,)
+                                          Use \t para tabulación, | para pipe.
+          -nh, --no-header                El archivo no tiene fila de encabezado.
+                                          Los campos se identifican por índice (0, 1, 2...).
+          -h, --help                      Muestra esta ayuda y termina.
+
+        EJEMPLOS
+          sortx empleados.csv -b apellido
+          sortx empleados.csv resultado.csv -b salario:num:desc
+          sortx empleados.csv -b departamento -b salario:num:desc -o resultado.csv
+          sortx -i empleados.csv -o resultado.csv -b apellido
+          sortx datos.tsv -d "\t" -nh -b 1:alpha:asc
+          cat empleados.csv | sortx -b apellido > ordenado.csv
+          sortx --help
+        """);
+} 
+
+record SortField(string Name, bool Numeric, bool Descending);
+record AppConfig(
+    string?        InputFile,
+    string?        OutputFile,
+    string         Delimiter,
+    bool           NoHeader,
+    List<SortField> SortFields
+);
