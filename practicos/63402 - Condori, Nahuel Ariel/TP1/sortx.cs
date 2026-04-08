@@ -120,3 +120,46 @@ AppConfig? ParseArgs(string[] args)
 
     return (header, rows);
 }
+
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    if (config.SortFields.Count == 0 || rows.Count == 0) return rows;
+
+    IOrderedEnumerable<Dictionary<string, string>>? orderedRows = null;
+    bool isFirstCriteria = true;
+
+    foreach (var field in config.SortFields)
+    {
+        if (field.Numeric)
+        {
+            double GetNumVal(Dictionary<string, string> r)
+            {
+                if (!r.TryGetValue(field.Name, out string? val))
+                    throw new Exception($"Columna inexistente: {field.Name}");
+                return double.TryParse(val, out double num) ? num : 0;
+            }
+
+            if (isFirstCriteria)
+                orderedRows = field.Descending ? rows.OrderByDescending(GetNumVal) : rows.OrderBy(GetNumVal);
+            else
+                orderedRows = field.Descending ? orderedRows!.ThenByDescending(GetNumVal) : orderedRows!.ThenBy(GetNumVal);
+        }
+        else
+        {
+            string GetAlphaVal(Dictionary<string, string> r)
+            {
+                if (!r.TryGetValue(field.Name, out string? val))
+                    throw new Exception($"Columna inexistente: {field.Name}");
+                return val;
+            }
+
+            if (isFirstCriteria)
+                orderedRows = field.Descending ? rows.OrderByDescending(GetAlphaVal) : rows.OrderBy(GetAlphaVal);
+            else
+                orderedRows = field.Descending ? orderedRows!.ThenByDescending(GetAlphaVal) : orderedRows!.ThenBy(GetAlphaVal);
+        }
+        isFirstCriteria = false;
+    }
+
+    return orderedRows?.ToList() ?? rows;
+}
