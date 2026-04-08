@@ -11,6 +11,8 @@ try
 
     var table = ParseDelimited(inputText, config);
 
+    ValidateSortFields(table.Headers, config);
+
     var sortedRows = SortRows(table.Rows, config);
 
     var outputText = Serialize(table.Headers, sortedRows, config);
@@ -156,6 +158,27 @@ string ReadInput(AppConfig config)
     else
     {
         return Console.In.ReadToEnd();
+    }
+}
+
+void ValidateSortFields(List<string> headers, AppConfig config)
+{
+    foreach (var sortField in config.SortFields)
+    {
+        bool existe = false;
+
+        foreach (var header in headers)
+        {
+            if (header == sortField.Name)
+            {
+                existe = true;
+            }
+        }
+
+        if (!existe)
+        {
+            throw new Exception("La columna '" + sortField.Name + "' no existe.");
+        }
     }
 }
 
