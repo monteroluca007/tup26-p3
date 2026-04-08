@@ -107,6 +107,26 @@ SortField ParseSortField(string text)
 }
 
 
+string ReadInput(string? path)
+{
+    if (path == null)
+        return Console.In.ReadToEnd();
+
+    if (!File.Exists(path))
+        throw new Exception($"Archivo no encontrado: {path}");
+
+    return File.ReadAllText(path);
+}
+
+void WriteOutput(string? path, string content)
+{
+    if (path == null)
+        Console.Write(content);
+    else
+        File.WriteAllText(path, content);
+}
+
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
