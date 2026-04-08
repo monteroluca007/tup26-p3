@@ -61,5 +61,35 @@ string ReadInput(AppConfig config)
         return Console.In.ReadToEnd();
     }
     return File.ReadAllText(config.InputFile);
+}(string[] Header, List<Dictionary<string, string>> Rows) ParseDelimited(string text, AppConfig config)
+{
+    var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
+                    .Where(l => !string.IsNullOrWhiteSpace(l)).ToArray();
+
+    if (lines.Length == 0) return (Array.Empty<string>(), new List<Dictionary<string, string>>());
+
+    string[] header;
+    int startIndex = 0;
+
+    if (config.NoHeader)
+    {
+        header = Enumerable.Range(0, lines[0].Split(config.Delimiter).Length).Select(i => i.ToString()).ToArray();
+    }
+    else
+    {
+        header = lines[0].Split(config.Delimiter);
+        startIndex = 1;
+    }
+
+    var rows = new List<Dictionary<string, string>>();
+    for (int i = startIndex; i < lines.Length; i++)
+    {
+        var values = lines[i].Split(config.Delimiter);
+        var row = new Dictionary<string, string>();
+        for (int j = 0; j < header.Length; j++) row[header[j]] = j < values.Length ? values[j] : "";
+        rows.Add(row);
+    }
+    return (header, rows);
 }
+
 
