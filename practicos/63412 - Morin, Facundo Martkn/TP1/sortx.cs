@@ -33,7 +33,7 @@ try
         {
             string arg = args[i];
 
-            if (arg == "--ayuda" || arg == "-ay")
+            if (arg == "--help" || arg == "-h")
             {
                 showHelp = true;
                 continue;
@@ -191,6 +191,19 @@ void WriteOutput(string text, AppConfig cfg)
     else
         Console.Write(text);
 }
+
+void showHelp()
+{
+    Console.WriteLine("Uso: sortx [input [output]] [-b|--by campo[:tipo[:orden]]]... [-i|--input input] [-o|--output output] [-d|--delimiter delimitador] [-nh|--no-header] [-h|--help]");
+    Console.WriteLine("Opciones:");
+    Console.WriteLine("  -b, --by campo[:tipo[:orden]]   Especifica un campo de ordenamiento. Tipo puede ser 'num' para orden numérico. Orden puede ser 'desc' para descendente.");
+    Console.WriteLine("  -i, --input input                Archivo de entrada (por defecto, stdin).");
+    Console.WriteLine("  -o, --output output              Archivo de salida (por defecto, stdout).");
+    Console.WriteLine(@"  -d, --delimiter delimitador      Delimitador de campos (por defecto, ','). Use '\t' para tabulador.");
+    Console.WriteLine("  -nh, --no-header                Indica que la entrada no tiene encabezado.");
+    Console.WriteLine("  -h, --help                      Muestra esta ayuda.");
+}
+
 
 }
 catch (Exception ex)
