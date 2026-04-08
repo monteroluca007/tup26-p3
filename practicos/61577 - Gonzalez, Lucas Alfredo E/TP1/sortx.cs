@@ -15,3 +15,11 @@ record Configuracion(
     bool TieneEncabezado,
     List<(string Campo, string Tipo, string Orden)> CriteriosOrdenamiento
 );
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // Aqui va el codigo principal
+    }
+}
