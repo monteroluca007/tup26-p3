@@ -102,7 +102,7 @@ List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
     var table = new List<Dictionary<string, string>>();
     string[] headers;
 
-    if (!config.NoHeader)
+    if (config.NoHeader)
     {
         headers = lines[0].Split(config.Delimiter);
 
