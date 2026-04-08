@@ -188,6 +188,31 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
         return ordered.ToList();
     }
 
+ string Serialize(List<Dictionary<string, string>> rows,string[]? headers,AppConfig cfg)
+    {
+        var sb = new System.Text.StringBuilder();
+
+        if (!cfg.NoHeader && headers is not null)
+        {
+            sb.AppendLine(string.Join(cfg.Delimiter, headers));
+            foreach (var row in rows)
+            {
+                var values = headers.Select(h => row.TryGetValue(h, out string? v) ? v : string.Empty);
+                sb.AppendLine(string.Join(cfg.Delimiter, values));
+            }
+        }
+        else
+        {
+            foreach (var row in rows)
+            {
+                var values = row.OrderBy(kv => int.Parse(kv.Key)).Select(kv => kv.Value);
+                sb.AppendLine(string.Join(cfg.Delimiter, values));
+            }
+        }
+
+        return sb.ToString();
+    }
+
 
 
 
