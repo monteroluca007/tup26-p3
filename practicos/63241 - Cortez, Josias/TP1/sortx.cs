@@ -122,5 +122,25 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
     var rowsArray = rows.ToArray();
     Array.Sort(rowsArray, comparison);
     return rowsArray.ToList();
+}string Serialize(string[] header, List<Dictionary<string, string>> rows, AppConfig config)
+{
+    var lines = new List<string>();
+    if (!config.NoHeader && header.Length > 0) lines.Add(string.Join(config.Delimiter, header));
+
+    foreach (var row in rows)
+    {
+        var values = header.Select(h => row.ContainsKey(h) ? row[h] : "").ToArray();
+        lines.Add(string.Join(config.Delimiter, values));
+    }
+    return string.Join(Environment.NewLine, lines);
 }
+
+void WriteOutput(string text, AppConfig config)
+{
+    if (string.IsNullOrEmpty(config.OutputFile)) Console.Write(text + Environment.NewLine);
+    else File.WriteAllText(config.OutputFile, text + Environment.NewLine);
+}
+
+record SortField(string Name, bool Numeric, bool Descending);
+record AppConfig(string? InputFile, string? OutputFile, string Delimiter, bool NoHeader, List<SortField> SortFields);
 
