@@ -11,6 +11,29 @@ try
 {
     var config = ParsearArgumentos(args);
 
+    if (config.ShowHelp)
+    {
+        Console.WriteLine("""
+Uso:
+  sortx [input [output]] [opciones]
+
+Opciones:
+  -b, --by campo[:tipo[:orden]]   Campo de ordenamiento
+  -i, --input archivo             Archivo de entrada
+  -o, --output archivo            Archivo de salida
+  -d, --delimiter delimitador     Delimitador (default: ,)
+  -nh, --no-header                Sin encabezado
+  -ay, --ayuda                      Mostrar ayuda
+
+Ejemplos:
+  sortx empleados.csv -b apellido
+  sortx empleados.csv -b salario:num:desc
+  sortx datos.tsv -d "\\t" -nh -b 1:num:asc
+""");
+        return;
+    }
+
+
     var textoEntrada = LeerEntrada(config);
 
     var (filas, encabezados) = ParsearDelimitado(textoEntrada, config);
@@ -216,6 +239,18 @@ string Serializar(List<string[]> filas, string[]? encabezados, AppConfig config)
     return string.Join('\n', lineas);
 }
 
+void EscribirSalida(string texto, AppConfig config)
+{
+    if (config.OutputFile != null)
+    {
+        File.WriteAllText(config.OutputFile, texto);
+    }
+    else
+    {
+        Console.WriteLine(texto);
+    }
+}
+
 
 
 record SortField(string Name, bool Numeric, bool Descending);
@@ -225,6 +260,7 @@ record AppConfig(
     string? OutputFile,
     string Delimiter,
     bool NoHeader,
+    bool ShowHelp,
     List<SortField> SortFields
 );
 
