@@ -77,7 +77,50 @@ string ReadInput(AppConfig config)
 
 List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
 {
-    return new List<Dictionary<string, string>>();
+    var filas = new List<Dictionary<string, string>>();
+
+    if (string.IsNullOrWhiteSpace(text))
+    {
+        return filas;
+    }
+
+    var lineas = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+    if (lineas.Length == 0)
+    {
+        return filas;
+    }
+
+    var encabezados = lineas[0].Trim().Split(config.Delimiter);
+
+    for (int i = 1; i < lineas.Length; i++)
+    {
+        var linea = lineas[i].Trim();
+
+        if (linea == "")
+        {
+            continue;
+        }
+
+        var campos = linea.Split(config.Delimiter);
+        var fila = new Dictionary<string, string>();
+
+        for (int j = 0; j < encabezados.Length; j++)
+        {
+            var valor = "";
+
+            if (j < campos.Length)
+            {
+                valor = campos[j].Trim();
+            }
+
+            fila[encabezados[j].Trim()] = valor;
+        }
+
+        filas.Add(fila);
+    }
+
+    return filas;
 }
 
 List<Dictionary<string, string>> SortRows(
@@ -93,7 +136,19 @@ string Serialize(
     AppConfig config
 )
 {
-    return "";
+    var salida = "";
+
+    foreach (var fila in data)
+    {
+        foreach (var par in fila)
+        {
+            salida += par.Key + "=" + par.Value + " ";
+        }
+
+        salida += "\n";
+    }
+
+    return salida;
 }
 
 void WriteOutput(AppConfig config, string text)
