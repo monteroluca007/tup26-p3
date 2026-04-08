@@ -17,19 +17,19 @@ try{
         string delimitador = ",";
         bool noHeader = false;
         bool ayuda = false;
-        List<SortFields> sortFields = new ();
+        List<SortField> sortFields = new ();
         int positional = 0;
 
-        SortFields ParseSortFields(string spec){
+        SortField ParseSortFields(string spec){
 
             var partes = spec.Split(':');
-            string nombre = parts[0];
+            string nombre = partes[0];
             bool numerico = partes.Length > 1 && partes[1].Equals("num", StringComparison.OrdinalIgnoreCase);
-            bool descender = parts.Length > 2 && partes[2].Equals("desc", StringComparison.OrdinalIgnoreCase);
-            return new SortFields (nombre, numerico, descender);
+            bool descender = partes.Length > 2 && partes[2].Equals("desc", StringComparison.OrdinalIgnoreCase);
+            return new SortField (nombre, numerico, descender);
         }
 
-        for (int i = 0; i < args.length; i++)
+        for (int i = 0; i < args.Length; i++)
         {
             string arg = args[i];
 
@@ -47,8 +47,8 @@ try{
             {
                 if (i + 1 >= args.Length)
                 throw new ArgumentException($"La opcion '{arg}' requiere un valor.");
-               sortFields = args.Length.Add(ParseSortFields(args[++1]));
-               continue;
+                sortFields.Add(ParseSortFields(args[++i]));
+                continue;
             }
             if (arg == "--entrada" || arg == "-en")
             {
@@ -235,5 +235,75 @@ else
 return sb.ToString();
 }
 
+//Ejercicio 6
+
+void WriteSalida(string text, AppConfig cfg)
+{
+    if (cfg.salida is not null)
+    File.WriteAllText(cfg.salida, text);
+    else
+    Console.Write(text);
+}
+
+void ayuda()
+{
+    Console.WriteLine(@"sortx - Ordena datos de textos delimitados (csv, tsv, etc.)");
+    Console.WriteLine(@"Su uso: sortx [entrada [salida]] [-b|--by campo[:tipo[:orden]]]... [-i|--input entrada] [-o|--output salida] [-d|--delimiter delimitador] [-nh|--no-header] [-h|--help]");
+
+    Opciones:
+
+    -b|--by campo[:tipo[:orden]]   Especifica un campo por el cual ordenar. Se puede repetir para ordenar por varios campos. 'tipo' puede ser 'num' para orden numérico (por defecto es orden lexicográfico). 'orden' puede ser 'desc' para orden descendente (por defecto es ascendente).
+
+    -i|--input entrada             Especifica el archivo de entrada. Si no se especifica, se lee de la entrada estándar.
+
+    -o|--output salida             Especifica el archivo de salida. Si no se   especifica, se escribe a la salida estándar.
+
+    -d|--delimiter delimitador      Especifica el delimitador de campos (por defecto es la coma ','). Para tabulador, usar '\t'.
+
+    -nh|--no-header                Indica que la primera línea no es un encabezado, sino que es parte de los datos. En este caso, las columnas se referencian por su índice (0, 1, 2, etc.) en lugar de por nombre.
+
+    -h|--help  ayuda                    Muestra esta ayuda y sale.
+}
+
+var config = ParseArgs(args);
+if (config.Ayuda)
+{
+    ayuda();
+    return;
 
 }
+var rawText = ReadEntrada(config);
+var (rows, headers) = ParseDelimited(rawText, config);
+var sortedRows = SortRows(rows, config.SortFields);
+var salidaText = Serialize(sortedRows, headers, config);
+WriteSalida(salidaText, config);
+
+}
+catch (ArgumentException ex)
+{
+    Console.Error.WriteLine($"Error de argumento: {ex.Message}");
+    Console.Error.WriteLine("Use --help para ver la ayuda.");
+    Environment.Exit(1);
+}
+catch (FileNotFoundException ex)
+{
+    Console.Error.WriteLine($"Error: Archivo no encontrado - {ex.FileName}");
+    Environment.Exit(1);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error inesperado: {ex.Message}");
+    Environment.Exit(1);
+}
+record SortField(
+    string Nombre,
+    bool Numeric,
+    bool Descender);
+
+record AppConfig(
+    string? entrada,
+    string? salida,
+    string Delimitador,
+    bool NoHeader,
+    bool Ayuda,
+    List<SortField> SortFields);
