@@ -101,4 +101,75 @@ AppConfig ParseArgs(string[] argumentos)
                 break;
         }
     } 
+
+
+ if (input == null && posicionales.Count > 0)
+        input = posicionales[0];
+
+    if (output == null && posicionales.Count > 1)
+        output = posicionales[1];
+
+    if (posicionales.Count > 2)
+        throw new Exception("Hay demasiados argumentos posicionales.");
+
+    if (reglas.Count == 0)
+        throw new Exception("Debes indicar al menos un campo de orden con -b.");
+
+    return new AppConfig(input, output, separador, sinHeader, reglas);
+
+    void MostrarAyuda()
+    {
+        Console.WriteLine("Uso:");
+        Console.WriteLine("sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...");
+        Console.WriteLine("      [-i|--input input] [-o|--output output]");
+        Console.WriteLine("      [-d|--delimiter delimitador]");
+        Console.WriteLine("      [-nh|--no-header] [-h|--help]");
+        Console.WriteLine();
+        Console.WriteLine("Ejemplos:");
+        Console.WriteLine("sortx empleados.csv -b apellido");
+        Console.WriteLine("sortx empleados.csv -b salario:num:desc");
+        Console.WriteLine("sortx datos.tsv -d \"\\t\" -nh -b 1:alpha:asc");
+    }
+}
+
+
+SortField ParseSortField(string texto)
+{
+    string[] partes = texto.Split(':');
+
+    if (partes.Length == 0 || string.IsNullOrWhiteSpace(partes[0]))
+        throw new Exception("Campo inválido en --by.");
+
+    string nombre = partes[0];
+    bool esNumerico = false;
+    bool esDescendente = false;
+
+    if (partes.Length > 1)
+    {
+        string tipo = partes[1].ToLower();
+
+        if (tipo == "num")
+            esNumerico = true;
+        else if (tipo == "alpha")
+            esNumerico = false;
+        else
+            throw new Exception("Tipo inválido en --by: " + partes[1]);
+    }
+
+    if (partes.Length > 2)
+    {
+        string orden = partes[2].ToLower();
+
+        if (orden == "desc")
+            esDescendente = true;
+        else if (orden == "asc")
+            esDescendente = false;
+        else
+            throw new Exception("Orden inválido en --by: " + partes[2]);
+    }
+
+    if (partes.Length > 3)
+        throw new Exception("Formato inválido en --by: " + texto);
+
+    return new SortField(nombre, esNumerico, esDescendente);
 }
