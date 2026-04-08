@@ -135,6 +135,55 @@ string LeerEntrada(Configuracion config)
     }
     return (filas, config.SinEncabezado ? null : encabezados);
 }
+List<Dictionary<string, string>> OrdenarFilas(List<Dictionary<string, string>> filas, Configuracion config)
+{
+    IOrderedEnumerable<Dictionary<string, string>>? ordenado = null;
+    foreach (var campo in config.Campos)
+    {
+        Func<Dictionary<string, string>, object> clave = fila =>
+        {
+            if (!fila.ContainsKey(campo.Nombre))
+                throw new Exception($"Columna inexistente: {campo.Nombre}");
 
+            var valor = fila[campo.Nombre];
+
+            if (campo.EsNumero)
+                return double.TryParse(valor, out var num) ? num : 0;
+            return valor;
+        };
+
+        if (ordenado == null)
+        { ordenado = campo.Desc
+                ? filas.OrderByDescending(clave)
+                : filas.OrderBy(clave); }
+        else
+        { ordenado = campo.Desc
+                ? ordenado.ThenByDescending(clave)
+                : ordenado.ThenBy(clave);  }
+    }
+    return ordenado!.ToList();
+}
+string ConvertirTexto(List<Dictionary<string, string>> filas, List<string>? encabezado, Configuracion config)
+{
+    var lineas = new List<string>();
+
+    if (encabezado != null)
+        lineas.Add(string.Join(config.Delimitador, encabezado));
+
+    foreach (var fila in filas)
+    {
+        var linea = string.Join(config.Delimitador, fila.Values);
+        lineas.Add(linea);
+    }
+
+    return string.Join("\n", lineas);
+}
+void EscribirSalida(string texto, Configuracion config)
+{
+    if (config.Salida != null)
+        File.WriteAllText(config.Salida, texto);
+    else
+        Console.WriteLine(texto);
+}
 record CampoOrden(string Nombre, bool EsNumero, bool Desc);
 record Configuracion( string? Entrada,string? Salida,string Delimitador,bool SinEncabezado,List<CampoOrden> Campos,bool Ayuda);
