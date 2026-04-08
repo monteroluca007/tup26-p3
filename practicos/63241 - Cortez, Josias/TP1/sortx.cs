@@ -91,5 +91,36 @@ string ReadInput(AppConfig config)
     }
     return (header, rows);
 }
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    if (config.SortFields.Count == 0) return rows;
 
+    Comparison<Dictionary<string, string>> comparison = (a, b) =>
+    {
+        foreach (var field in config.SortFields)
+        {
+            if (!a.TryGetValue(field.Name, out var valA) || !b.TryGetValue(field.Name, out var valB))
+                throw new Exception($"Columna '{field.Name}' no encontrada para ordenar.");
+
+            int cmp;
+            if (field.Numeric)
+            {
+                double numA = double.TryParse(valA, NumberStyles.Any, CultureInfo.InvariantCulture, out var na) ? na : double.MinValue;
+                double numB = double.TryParse(valB, NumberStyles.Any, CultureInfo.InvariantCulture, out var nb) ? nb : double.MinValue;
+                cmp = numA.CompareTo(numB);
+            }
+            else
+            {
+                cmp = string.Compare(valA, valB, StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (cmp != 0) return field.Descending ? -cmp : cmp;
+        }
+        return 0;
+    };
+
+    var rowsArray = rows.ToArray();
+    Array.Sort(rowsArray, comparison);
+    return rowsArray.ToList();
+}
 
