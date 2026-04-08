@@ -163,3 +163,25 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
 
     return orderedRows?.ToList() ?? rows;
 }
+string Serialize(string[]? header, List<Dictionary<string, string>> rows, AppConfig config)
+{
+    var sw = new StringWriter();
+
+    if (header != null)
+        sw.WriteLine(string.Join(config.Delimiter, header));
+
+    foreach (var row in rows)
+    {
+        var values = new List<string>();
+        int colCount = header != null ? header.Length : row.Count;
+
+        for (int i = 0; i < colCount; i++)
+        {
+            string key = header != null ? header[i] : i.ToString();
+            values.Add(row.TryGetValue(key, out var val) ? val : "");
+        }
+        sw.WriteLine(string.Join(config.Delimiter, values));
+    }
+
+    return sw.ToString();
+}
