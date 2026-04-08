@@ -27,39 +27,50 @@ catch (Exception ex)
 
 AppConfig ParseArgs(string[] args)
 {
-    string? inputFile = null;
-    string? outputFile = null;
+    string? input = null;
+    string? output = null;
+    var sortFields = new List<SortField>();
 
-    foreach (var a in args)
+    for (int i = 0; i < args.Length; i++)
     {
+        var a = args[i];
+
         if (a == "-h" || a == "--help")
         {
             ShowHelp();
             Environment.Exit(0);
         }
-       // ignorar "--"
-        if (a == "--")
+        else if (a == "-b" || a == "--by")
+        {
+            if (i + 1 >= args.Length)
+            {
+                throw new Exception("Falta el campo despues de -b o --by");
+            }
+
+            var fieldName = args[i + 1];
+            sortFields.Add(new SortField(fieldName, false, false));
+            i++;
+        }
+        else if (a == "--")
         {
             continue;
         }
-
-        // argumentos posicionales
-        if (inputFile == null)
+        else if (input == null)
         {
-            inputFile = a;
+            input = a;
         }
-        else if (outputFile == null)
+        else if (output == null)
         {
-            outputFile = a;
+            output = a;
         }
     }
 
     return new AppConfig(
-        inputFile,
-        outputFile,
+        input,
+        output,
         ",",
         false,
-        new List<SortField>()
+        sortFields
     );
 }
 
@@ -135,7 +146,34 @@ List<Dictionary<string, string>> SortRows(
     AppConfig config
 )
 {
+    if (config.SortFields.Count == 0)
+    {
+        return data;
+    }
+
+    var field = config.SortFields[0];
+
+    data.Sort(CompararFilas);
+
     return data;
+
+    int CompararFilas(Dictionary<string, string> a, Dictionary<string, string> b)
+    {
+        var valorA = "";
+        var valorB = "";
+
+        if (a.ContainsKey(field.Name))
+        {
+            valorA = a[field.Name];
+        }
+
+        if (b.ContainsKey(field.Name))
+        {
+            valorB = b[field.Name];
+        }
+
+        return string.Compare(valorA, valorB);
+    }
 }
 
 string Serialize(
@@ -179,6 +217,7 @@ void ShowHelp()
 {
     Console.WriteLine("Uso: sortx [opciones] [input] [output]");
     Console.WriteLine("  -h, --help   Muestra ayuda");
+    Console.WriteLine("  -b, --by     Campo de ordenamiento");
 }
 
 
