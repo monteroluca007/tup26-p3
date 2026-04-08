@@ -89,3 +89,34 @@ AppConfig? ParseArgs(string[] args)
 
     throw new Exception("No se especificó archivo de entrada ni se detectó un flujo de texto en stdin.");
 }
+
+(string[]? Header, List<Dictionary<string, string>> Rows) ParseDelimited(string text, AppConfig config)
+{
+    var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+    if (lines.Length == 0) return (null, new List<Dictionary<string, string>>());
+
+    string[]? header = null;
+    int startRow = 0;
+
+    if (!config.NoHeader)
+    {
+        header = lines[0].Split(config.Delimiter);
+        startRow = 1; 
+    }
+
+    var rows = new List<Dictionary<string, string>>();
+    for (int i = startRow; i < lines.Length; i++)
+    {
+        var values = lines[i].Split(config.Delimiter);
+        var rowDict = new Dictionary<string, string>();
+
+        for (int j = 0; j < values.Length; j++)
+        {
+            string key = config.NoHeader ? j.ToString() : header![j];
+            rowDict[key] = values[j];
+        }
+        rows.Add(rowDict);
+    }
+
+    return (header, rows);
+}
