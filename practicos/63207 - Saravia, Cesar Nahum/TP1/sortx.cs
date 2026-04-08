@@ -126,6 +126,54 @@ void WriteOutput(string? path, string content)
         File.WriteAllText(path, content);
 }
 
+(string[] headers, List<Dictionary<string, string>> rows)
+ParseDelimited(string text, AppConfig config)
+{
+    var lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+    if (lines.Length == 0)
+        return (new string[0], new List<Dictionary<string, string>>());
+
+    string[] headers;
+    int start = 0;
+
+    if (!config.NoHeader)
+    {
+        var raw = lines[0].Split(config.Delimiter);
+        headers = new string[raw.Length];
+
+        for (int i = 0; i < raw.Length; i++)
+            headers[i] = raw[i].Trim();
+
+        start = 1;
+    }
+    else
+    {
+        int cols = lines[0].Split(config.Delimiter).Length;
+        headers = new string[cols];
+
+        for (int i = 0; i < cols; i++)
+            headers[i] = i.ToString();
+    }
+
+    var rows = new List<Dictionary<string, string>>();
+
+    for (int i = start; i < lines.Length; i++)
+    {
+        var values = lines[i].Split(config.Delimiter);
+        var row = new Dictionary<string, string>();
+
+        for (int j = 0; j < headers.Length; j++)
+        {
+            string val = j < values.Length ? values[j] : "";
+            row[headers[j]] = val.Trim();
+        }
+
+        rows.Add(row);
+    }
+
+    return (headers, rows);
+}
 
 record SortField(string Name, bool Numeric, bool Descending);
 
