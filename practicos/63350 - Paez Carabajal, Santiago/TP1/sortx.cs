@@ -151,7 +151,7 @@ string ReadInput(string? file)
     return (headers, rows);
 }
 
-//  PASO 4 
+//  PASO 4 ordenamiento de filas
 
 List<string[]> SortRows(List<string[]> rows, List<string> headers, AppConfig config)
 {
