@@ -172,7 +172,34 @@ List<string[]> OrdenarFilas(List<string[]> filas, string[]? encabezados, AppConf
     });
 
     return filas;
-}   
+}
+
+int ObtenerIndiceCampo(string nombreCampo, string[]? encabezados)
+{
+    if (encabezados != null)
+    {
+        for (int i = 0; i < encabezados.Length; i++)
+        {
+            if (encabezados[i].Equals(nombreCampo, StringComparison.OrdinalIgnoreCase))
+            {
+                return i;
+            }
+        }
+
+        throw new Exception($"Campo no encontrado: {nombreCampo}");
+    }
+    else
+    {
+        if (int.TryParse(nombreCampo, out int indice))
+        {
+            return indice;
+        }
+
+        throw new Exception($"Índice inválido: {nombreCampo}");
+    }
+}
+
+
 
 record SortField(string Name, bool Numeric, bool Descending);
 
