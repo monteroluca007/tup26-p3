@@ -19,3 +19,10 @@ try
     List<Dictionary<string, string>> sortedRows = SortRows(rows, config.SortFields);
     string outputText = WriteOutput(header, sortedRows, config);
     WriteOutputFile(outputText, config);
+    }
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error: {ex.Message}");
+    Environment.Exit(1);
+}
+
