@@ -7,6 +7,30 @@
 Console.WriteLine($"sortx {string.Join(" ", args)}");
 
 
+try
+{
+    var config = ParsearArgumentos(args);
+
+    var textoEntrada = LeerEntrada(config);
+
+    var (filas, encabezados) = ParsearDelimitado(textoEntrada, config);
+
+    var filasOrdenadas = OrdenarFilas(filas, encabezados, config);
+
+    var textoSalida = Serializar(filasOrdenadas, encabezados, config);
+
+    EscribirSalida(textoSalida, config);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine("Error: " + ex.Message);
+    Environment.Exit(1);
+}
+
+
+
+
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
