@@ -241,6 +241,11 @@ string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
 
     return sb.ToString();
 }
+
+void WriteOutput(string output, AppConfig config)
+{
+    Console.WriteLine(output);
+}
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
