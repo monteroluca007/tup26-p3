@@ -71,6 +71,34 @@ Configuracion LeerArgumentos(string[] args)
         i++;
     }
 
+    if (campos.Count == 0)
+        throw new Exception("Debe usar -b para ordenar");
 
+    return new Configuracion(entrada, salida, delimitador, sinEncabezado, campos, ayuda);
+}
+CampoOrden ParsearCampo(string texto)
+{
+    var partes = texto.Split(':');
+    string nombre = partes[0];
+    bool esNumero = false;
+    bool desc = false;
+
+    if (partes.Length > 1)
+        esNumero = partes[1] == "num";
+    if (partes.Length > 2)
+        desc = partes[2] == "desc";
+    return new CampoOrden(nombre, esNumero, desc);
+}
+void MostrarAyuda()
+{
+    Console.WriteLine("Uso: sortx [entrada [salida]] -b campo[:tipo[:orden]]");
+}
+string LeerEntrada(Configuracion config)
+{
+    if (config.Entrada != null)
+        return File.ReadAllText(config.Entrada);
+
+    return Console.In.ReadToEnd();
+}
 record CampoOrden(string Nombre, bool EsNumero, bool Desc);
 record Configuracion( string? Entrada,string? Salida,string Delimitador,bool SinEncabezado,List<CampoOrden> Campos,bool Ayuda);
