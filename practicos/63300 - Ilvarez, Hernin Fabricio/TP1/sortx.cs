@@ -2,16 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 
 
-record SortField(string name, bool Numeric, bool Descending);
-record AppConfig(
-    string? InputFile,
-    string? OutputFile,
-    string Delimiter,
-    bool NoHeader,
-    List<SortField> SortFields);
+
+
 
 
 try
@@ -222,3 +216,13 @@ void WriteOutput(string output, AppConfig config)
         File.WriteAllText(config.OutputFile, output);
     }
 }
+
+record SortField(string Name, bool Numeric, bool Descending);
+record AppConfig(
+    string? InputFile,
+    string? OutputFile,
+    string Delimiter,
+    bool NoHeader,
+    List<SortField> SortFields);
+
+
