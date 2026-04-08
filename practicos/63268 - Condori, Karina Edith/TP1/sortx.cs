@@ -9,4 +9,9 @@ record AppConfig(
     string Delimiter,
     bool NoHeader,
     List<SortField> SortFields
-);
+
+
+try
+{
+    AppConfig config = ParseArgs(Environment.GetCommandLineArgs().Skip(1).ToArray());
+    string text = ReadInput(config);
