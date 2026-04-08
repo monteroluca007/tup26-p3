@@ -25,7 +25,7 @@ catch (Exception ex)
     Console.Error.WriteLine($"ERROR: {ex.Message}");
 }
 
-//  PASO 1: PARSE ARGS 
+// parseo de argumentos y configuración
 
 AppConfig ParseArgs(string[] args)
 {
