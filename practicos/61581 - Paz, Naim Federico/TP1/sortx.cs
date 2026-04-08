@@ -9,11 +9,11 @@ try
 
     var inputText = ReadInput(config);
 
-    var data = ParseDelimited(inputText, config);
+    var table = ParseDelimited(inputText, config);
 
-    var sorted = SortRows(data, config);
+    var sortedRows = SortRows(table.Rows, config);
 
-    var outputText = Serialize(sorted, config);
+    var outputText = Serialize(table.Headers, sortedRows, config);
 
     WriteOutput(config, outputText);
 }
@@ -75,23 +75,30 @@ string ReadInput(AppConfig config)
     }
 }
 
-List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
+(List<string> Headers, List<Dictionary<string, string>> Rows) ParseDelimited(string text, AppConfig config)
 {
-    var filas = new List<Dictionary<string, string>>();
+    var headers = new List<string>();
+    var rows = new List<Dictionary<string, string>>();
 
     if (string.IsNullOrWhiteSpace(text))
     {
-        return filas;
+        return (headers, rows);
     }
 
     var lineas = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
     if (lineas.Length == 0)
     {
-        return filas;
+        return (headers, rows);
     }
 
-    var encabezados = lineas[0].Trim().Split(config.Delimiter);
+    var primeraLinea = lineas[0].Trim();
+    var encabezados = primeraLinea.Split(config.Delimiter);
+
+    foreach (var encabezado in encabezados)
+    {
+        headers.Add(encabezado.Trim());
+    }
 
     for (int i = 1; i < lineas.Length; i++)
     {
@@ -105,7 +112,7 @@ List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
         var campos = linea.Split(config.Delimiter);
         var fila = new Dictionary<string, string>();
 
-        for (int j = 0; j < encabezados.Length; j++)
+        for (int j = 0; j < headers.Count; j++)
         {
             var valor = "";
 
@@ -114,13 +121,13 @@ List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
                 valor = campos[j].Trim();
             }
 
-            fila[encabezados[j].Trim()] = valor;
+            fila[headers[j]] = valor;
         }
 
-        filas.Add(fila);
+        rows.Add(fila);
     }
 
-    return filas;
+    return (headers, rows);
 }
 
 List<Dictionary<string, string>> SortRows(
@@ -132,23 +139,35 @@ List<Dictionary<string, string>> SortRows(
 }
 
 string Serialize(
+    List<string> headers,
     List<Dictionary<string, string>> data,
     AppConfig config
 )
 {
-    var salida = "";
+    var lineas = new List<string>();
+
+    lineas.Add(string.Join(config.Delimiter, headers));
 
     foreach (var fila in data)
     {
-        foreach (var par in fila)
+        var valores = new List<string>();
+
+        foreach (var header in headers)
         {
-            salida += par.Key + "=" + par.Value + " ";
+            if (fila.ContainsKey(header))
+            {
+                valores.Add(fila[header]);
+            }
+            else
+            {
+                valores.Add("");
+            }
         }
 
-        salida += "\n";
+        lineas.Add(string.Join(config.Delimiter, valores));
     }
 
-    return salida;
+    return string.Join("\n", lineas);
 }
 
 void WriteOutput(AppConfig config, string text)
