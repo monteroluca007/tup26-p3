@@ -1,21 +1,17 @@
 using System;
 using static System.Console;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Data.Common;
-
 try
 {
     /*parseargs  => reandinput => parsedelimited => sortrows => serialize => writeoutput
       Obtener de consola => leer config => separar => ordenar => escribir => entregar 
     */
-
     AppConfig configuracion = ParseArgs(args); //args ==> lo q pasa por consola 
     string texto = ReadInput(configuracion);
     List<Dictionary<string, string>> filas = ParseDelimited(texto, configuracion.Delimitador, configuracion.noheader);
 }
 catch (Exception e)
-{
+{   
     Error.WriteLine("Error encontrado:" + e.Message);
     Environment.Exit(1); // aviso que el programa fallo 
 }
@@ -76,9 +72,9 @@ static AppConfig ParseArgs(string[] argumentos)
     return new AppConfig(entrada, Salida, Delimitador, noheader, sortfields);
 
 }
-; //Retornara el record AppConfig la funcion es ParseArgs 
 
-static string ReadInput(AppConfig configuracion) // Me lee las entradas detexto, valida y escupe un string que se guarda en texto
+static string ReadInput(AppConfig configuracion) 
+// lee entradas, valida y devuelve un string
 {
     if (configuracion.Entrada != null)
     {
@@ -90,19 +86,20 @@ static string ReadInput(AppConfig configuracion) // Me lee las entradas detexto,
     }
 }
 
+
 static List<Dictionary<string, string>> ParseDelimited(string texto, string? delimitador, bool noheader)
 {
     string[] linea = texto.Split('\n'); // Divido por fila
-    Dictionary<string, string> fila = []; 
+    Dictionary<string, string> fila = [];
     List<Dictionary<string, string>> filas = []; // Lista final 
 
     if (noheader == false)
     {
         string[] encabezado = linea[0].Split(delimitador); // nombres columna 
-        
+
         for (int i = 1; i < linea.Length; i++) //recorre las filas
         {
-            string[] valores = linea[i].Trim().Split(delimitador);  
+            string[] valores = linea[i].Trim().Split(delimitador);
             for (int j = 0; j < valores.Length; j++)
             {
                 fila.Add(encabezado[j], valores[j]);
@@ -117,21 +114,43 @@ static List<Dictionary<string, string>> ParseDelimited(string texto, string? del
     }
 
     return filas;
-/*  
-encabezado=[id,nombre,apellido,edad,salario,departamento]
-valores[0]=[1,Carlos,García,35,85000,Ingeniería]
-valores[1]=[2,Ana ]
-  id,nombre,apellido,edad,salario,departamento
-  1,Carlos,García,35,85000,Ingeniería
-  2,Ana,Martínez,28,72000,Diseño
-  3,Luis,Rodríguez,42,120000,Gerencia
-  4,María,López,31,88000,Ingeniería
-  5,Pedro,Sánchez,25,65000,Diseño
-  6,Laura,González,38,95000,Gerencia
+    /*  
+    encabezado=[id,nombre,apellido,edad,salario,departamento]
+    valores[0]=[1,Carlos,García,35,85000,Ingeniería]
+    valores[1]=[2,Ana ]
+      id,nombre,apellido,edad,salario,departamento
+      1,Carlos,García,35,85000,Ingeniería
+      2,Ana,Martínez,28,72000,Diseño
+      3,Luis,Rodríguez,42,120000,Gerencia
+      4,María,López,31,88000,Ingeniería
+      5,Pedro,Sánchez,25,65000,Diseño
+      6,Laura,González,38,95000,Gerencia
 
-    */
+        */
 }
+//4. SortRows       → ordenar las filas según los criterios configurados
 
+
+
+
+
+
+
+
+
+
+
+static void WriteOutput(string contenido, AppConfig configuracion) //salida
+{
+    if (configuracion.Salida != null)
+    {
+        File.WriteAllText(configuracion.Salida, contenido);
+    }
+    else
+    {
+        Write(contenido); // Escribe en la consola (stdout)
+    }
+}
 record SortField(string campo, bool alpha, bool num, bool desc, bool asc); // campo por el que ordena. 
 record AppConfig(string? Entrada, string? Salida, string Delimitador, bool noheader, List<SortField> sortfields);
 
@@ -154,20 +173,13 @@ sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
       [-i|--input input] [-o|--output output]
       [-d|--delimiter delimitador]
       [-nh|--no-header] [-h|--help]
-| Opción larga    | Corta  | Descripción |
-|-----------------|--------|-------------|
-| `--by`          | `-b`   | Campo por el que ordenar. Se puede repetir para ordenamiento múltiple. |
-| `--input`       | `-i`   | Archivo de entrada. |
-| `--output`      | `-o`   | Archivo de salida. |
-| `--delimiter`   | `-d`   | Carácter delimitador. Default: `,`. Usar `\t` para tabulación. |
-| `--no-header`   | `-nh`  | Indica que el archivo no tiene fila de encabezado. En ese caso los campos se identifican por su índice numérico (0, 1, 2...). |
-| `--help`        | `-h`   | Muestra la ayuda y termina. |
 
-Especificación de campo: `campo[:tipo[:orden]]`
+| `--by`          | `-b`   | Campo por el que ordenar. Se puede repetir para ordenamiento múltiple. |
+| `--no-header`   | `-nh`  | Indica que el archivo no tiene fila de encabezado. En ese caso los campos se identifican por su índice numérico (0, 1, 2...). |
 
 Cada valor de `--by` tiene el formato `campo[:tipo[:orden]]`, donde:
 
-- **`campo`** — nombre de la columna (si hay encabezado) o índice numérico desde 0 (si no hay encabezado).
+- **`campo`** — nombre de la columna (si hay encabezado) o índice numérico desde 0 (si no   hay encabezado).
 - **`tipo`** — criterio de comparación:
                              `alpha` — comparación alfabética (default).
   -                          `num` — comparación numérica.
@@ -175,17 +187,8 @@ Cada valor de `--by` tiene el formato `campo[:tipo[:orden]]`, donde:
   -                           `asc` — ascendente (default).
   -                           `desc` — descendente.
 
-
-1. ParseArgs      → leer la configuración desde los argumentos
-2. ReadInput      → leer el texto desde el archivo o stdin
-3. ParseDelimited → convertir el texto en una lista de filas (lista de diccionarios)
 4. SortRows       → ordenar las filas según los criterios configurados
 5. Serialize      → convertir las filas ordenadas de vuelta a texto
 6. WriteOutput    → escribir en el archivo de salida o stdout
-
-punto de entrada (`try/catch` principal) debe limitarse a invocar estas funciones en orden, sin lógica adicional.
-
-Si el archivo de entrada no se especifica, la herramienta debe leer desde stdin.
-Si el archivo de salida no se especifica, la herramienta debe escribir en stdout.
 
 */
