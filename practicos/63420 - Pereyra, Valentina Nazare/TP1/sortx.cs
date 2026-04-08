@@ -77,3 +77,16 @@ static Configuracion ObtenerConfiguracion(string[] args)
 
     return new Configuracion(entrada, salida, descendente, new List<CampoOrden>());
 }
+
+static List<string> LeerArchivo(string ruta)
+{
+    if (!File.Exists(ruta))
+        throw new FileNotFoundException("El archivo indicado no existe.");
+
+    return File.ReadAllLines(ruta).ToList();
+}
+
+static void GuardarArchivo(string ruta, List<string> lineas)
+{
+    File.WriteAllLines(ruta, lineas);
+}
