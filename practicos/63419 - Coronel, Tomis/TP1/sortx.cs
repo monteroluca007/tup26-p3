@@ -108,9 +108,6 @@ class Program
 
 
 
-
-
-
         if (campos.Count == 0)
             throw new Exception("Debe especificar al menos un campo de ordenamiento con -b o --by");
         
@@ -118,6 +115,7 @@ class Program
            return new configuracion(archivoEntrada, archivoSalida, delimitador, sinEncabezado, campos);
         }
      
+
      
      string leerEntrada(configuracion config)
      {
@@ -130,11 +128,14 @@ class Program
             return Console.In.ReadToEnd();
         }
 
+
+
         (List<string> encabezado, List<List<string>> filas) parsear(configuracion config, string texto)
         {
         
           var encabezado = new List<string>();
           var filas = new List<List<string>>();
+
 
             if (!config.SinEncabezado)
             {
@@ -160,11 +161,71 @@ class Program
             filas.Add(fila);
         }
 
-        return (encabezado, filas); 
+        return (encabezado, filas);
+
 
      }
+
+
+List<Dictionary<string, string>> Ordenar(Configuracion config, List<string> encabezado, List<Dictionary<string, string>> filas)
+{
+    for (int i = 0; i < filas.Count; i++)
+    {
+        for (int j = 0; j < filas.Count - 1; j++)
+        {
+            if (CompararFilas(config, encabezado, filas[j], filas[j + 1]) > 0)
+            {
+                var temp = filas[j];
+                filas[j] = filas[j + 1];
+                filas[j + 1] = temp;
+            
+            }
      
+        }
+    
+         
+    
      }
+                   return filas;
+
+ 
+ }
+
+
+   int compararfilas (configuracion config, List<string> encabezado, Dictionary<string, string> fila1, Dictionary<string, string> fila2)
+   {
+    foreach (var campo in config.Campos)
+    {
+        string valor1 = fila1[campo.nombre];
+        string valor2 = fila2[campo.nombre];
+        int comparacion;
+
+        if (campo.EsNumerico)
+        {
+            double num1 = double.Parse(valor1);
+            double num2 = double.Parse(valor2);
+            comparacion = num1.CompareTo(num2);
+        }
+        else
+        {
+            comparacion = string.Compare(valor1, valor2);
+        }
+
+        if (comparacion != 0)
+        {
+            return campo.Descendente ? -comparacion : comparacion;
+        }
+    }
+
+    return 0;
+   }
+
+
+}
+
+
+
+     
 
 
 
