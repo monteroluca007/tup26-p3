@@ -200,4 +200,3 @@ Laura,González,38,95000,Gerencia
 
 > [!NOTE]
 > Si bien el comando `sortx` se menciona para ilustrar el uso, la entrega es un archivo `sortx.cs` que se compila y ejecuta con `dotnet run sortx.cs -- [args]`. 
-
