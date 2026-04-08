@@ -31,9 +31,24 @@ class Program
     }
 
     static AppConfig ParseArgs(string[] args)
-    {
-        return new AppConfig(null, null, ",", false, new List<SortField>());
-    }
+{
+    string? input = null;
+    string? output = null;
+
+    if (args.Length > 0)
+        input = args[0];
+
+    if (args.Length > 1)
+        output = args[1];
+
+    return new AppConfig(
+        input,
+        output,
+        ",",
+        false,
+        new List<SortField>()
+    );
+}
 
     static string ReadInput(AppConfig config)
     {
