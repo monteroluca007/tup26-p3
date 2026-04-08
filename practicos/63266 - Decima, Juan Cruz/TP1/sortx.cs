@@ -199,6 +199,23 @@ int ObtenerIndiceCampo(string nombreCampo, string[]? encabezados)
     }
 }
 
+string Serializar(List<string[]> filas, string[]? encabezados, AppConfig config)
+{
+    var lineas = new List<string>();
+
+    if (!config.NoHeader && encabezados != null)
+    {
+        lineas.Add(string.Join(config.Delimiter, encabezados));
+    }
+
+    foreach (var fila in filas)
+    {
+        lineas.Add(string.Join(config.Delimiter, fila));
+    }
+
+    return string.Join('\n', lineas);
+}
+
 
 
 record SortField(string Name, bool Numeric, bool Descending);
