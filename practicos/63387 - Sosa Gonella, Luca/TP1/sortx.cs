@@ -121,7 +121,7 @@ string ReadInput(string? file)
     return File.ReadAllText(file);
 }
 
-// ── PASO 3 ─────────────────────────────────────────────
+// ── implementacion de ordenamiento ─────────────────────────────────────────────
 
 (List<string> headers, List<string[]> rows) ParseDelimited(string text, AppConfig config)
 {
