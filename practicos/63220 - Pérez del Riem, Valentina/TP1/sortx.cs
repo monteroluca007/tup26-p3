@@ -306,3 +306,29 @@ List<Dictionary<string, string>> SortRows(
 
     return resultado;
 }
+
+// 5. Serialize
+
+string Serialize(List<Dictionary<string, string>> rows, List<string> headers, AppConfig config)
+{
+    List<string> lineas = new List<string>();
+
+    if (config.NoHeader == false)
+    {
+        lineas.Add(string.Join(config.Delimiter, headers));
+    }
+
+    for (int i = 0; i < rows.Count; i++)
+    {
+        List<string> valores = new List<string>();
+
+        for (int j = 0; j < headers.Count; j++)
+        {
+            valores.Add(rows[i][headers[j]]);
+        }
+
+        lineas.Add(string.Join(config.Delimiter, valores));
+    }
+
+    return string.Join(Environment.NewLine, lineas);
+}
