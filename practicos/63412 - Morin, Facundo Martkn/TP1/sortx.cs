@@ -153,6 +153,37 @@ List<Dictionary<string, string>> SortRows(
     return rows;
 }
 
+string Serialize(
+    List<Dictionary<string, string>> rows,
+    string[]? headers,
+    AppConfig cfg)
+{
+    string result = "";
+
+    if (!cfg.NoHeader && headers != null)
+    {
+        result += string.Join(cfg.Delimiter, headers) + "\n";
+    }
+
+    foreach (var row in rows)
+    {
+        if (!cfg.NoHeader && headers != null)
+        {
+            List<string> values = new();
+            foreach (var h in headers)
+                values.Add(row[h]);
+
+            result += string.Join(cfg.Delimiter, values) + "\n";
+        }
+        else
+        {
+            result += string.Join(cfg.Delimiter, row.Values) + "\n";
+        }
+    }
+
+    return result;
+}
+
 }
 catch (Exception ex)
 {
