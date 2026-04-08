@@ -235,3 +235,13 @@ string Serialize(
 
     return sb.ToString();
 }
+
+void WriteOutput(string? filePath, string content)
+{
+    if (filePath == null)
+    {
+        Console.Write(content);
+        return;
+    }
+    File.WriteAllText(filePath, content);
+}
