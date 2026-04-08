@@ -103,6 +103,35 @@ string readinput(AppConfig cfg)
       return File.ReadAllText(cfg.InputFile); 
       return Console.In.ReadToEnd(); 
 } 
+// lista de fila y encabezado en base al texto de archivo cfg
+(List<Dictionary<string,string>> rows,string[]? Header) parsedelimited (string text, AppConfigconfig cfg)
+{
+    var lines =text
+    .Replace ("\r\n", "\n")
+    .Replace ("\r", "\n")
+    .Split('\n')
+    .Where(l => l.Length > 0)
+    .ToArray();
+}
+
+    if (lines.length == 0)
+     return (new List<Dictionary<string, string>>(), null);
+
+
+
+    string[] header;
+    int dataStart;
+
+    if (!cfg.NoHeader)
+    {
+        header = lines[0].Split(cfg.Delimiter);
+        dataStart = 1;
+    }
+    else
+    {
+       headers = null;
+       dataStart = 0;
+    }
 
 
 
