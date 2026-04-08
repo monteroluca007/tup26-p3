@@ -1,22 +1,7 @@
 using System;
 using System.Collections.Generic;
-
-// Punto de Entrada
-
-try
-{
-    AppConfig config = ParseArgs(args);
-
-    Console.WriteLine("Parseo exitoso");
-    Console.WriteLine($"Archivo de entrada: {config.InputFile ?? "Ninguno (stdin)"}");
-    Console.WriteLine($"Delimitador: '{config.Delimiter}'");
-    Console.WriteLine($"Cantidad de filtros: {config.SortFields.Count}");
-}
-catch (Exception ex)
-{
-    Console.Error.WriteLine($"Error: {ex.Message}");
-    Environment.Exit(1);
-}
+using System.Runtime.Serialization;
+using System.IO;
 
 // Definicion de Funciones
 
@@ -127,3 +112,27 @@ record AppConfig(
     bool NoHeader,
     List<SortField> SortFields
 );
+string ReadInput(AppConfig config)
+{
+    if (config.InputFile != null)
+        return File.ReadAllText(config.InputFile);
+    else
+        return Console.In.ReadToEnd();
+}
+
+// Punto de Entrada
+
+try
+{
+    var config = ParseArgs(args);
+    var text = ReadInput(config);
+    var rows = ParseDelimited(text, config);
+    var sorted = SortRows(rows, config);
+    var output = Serialize(sorted, config);
+    WriteOutput(config, output);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error: {ex.Message}");
+    Environment.Exit(1);
+}
