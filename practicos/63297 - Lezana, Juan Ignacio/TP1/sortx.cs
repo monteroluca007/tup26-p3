@@ -62,7 +62,14 @@ AppConfig ParseArgs(string[] args)
 
     return new AppConfig(input, output, delimiter, noHeader, sortFields);
 }
-string ReadInput(AppConfig config) => throw new NotImplementedException();
+
+string ReadInput(AppConfig config)
+{
+    if (config.InputFile != null)
+        return File.ReadAllText(config.InputFile);
+
+    return Console.In.ReadToEnd();
+}
 List<Dictionary<string,string>> ParseDelimited(string text, AppConfig config) => throw new NotImplementedException();
 List<Dictionary<string,string>> SortRows(List<Dictionary<string,string>> rows, AppConfig config) => throw new NotImplementedException();
 string Serialize(List<Dictionary<string,string>> rows, AppConfig config) => throw new NotImplementedException();
