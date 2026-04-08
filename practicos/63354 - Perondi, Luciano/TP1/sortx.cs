@@ -170,3 +170,48 @@ string ReadInput(string? filePath)
 
     return (headers, rows);
 }
+
+List<Dictionary<string, string>> SortRows(
+    List<Dictionary<string, string>> rows,
+    string[]                         headers,
+    List<SortField>                  sortFields)
+{
+    if (sortFields.Count == 0 || rows.Count == 0)
+        return rows;
+
+    foreach (var field in sortFields)
+    {
+        if (!headers.Contains(field.Name))
+            throw new Exception($"Columna no encontrada: '{field.Name}'.");
+    }
+
+    int CompareRows(Dictionary<string, string> a, Dictionary<string, string> b)
+    {
+        foreach (var field in sortFields)
+        {
+            string valA = a.GetValueOrDefault(field.Name, "");
+            string valB = b.GetValueOrDefault(field.Name, "");
+
+            int cmp;
+            if (field.Numeric)
+            {
+                var culture = System.Globalization.CultureInfo.InvariantCulture;
+                var style   = System.Globalization.NumberStyles.Any;
+                double numA = double.TryParse(valA, style, culture, out double na) ? na : 0;
+                double numB = double.TryParse(valB, style, culture, out double nb) ? nb : 0;
+                cmp = numA.CompareTo(numB);
+            }
+            else
+            {
+                cmp = string.Compare(valA, valB, StringComparison.CurrentCulture);
+            }
+
+            if (cmp != 0) return field.Descending ? -cmp : cmp;
+        }
+        return 0;
+    }
+
+    var sorted = new List<Dictionary<string, string>>(rows);
+    sorted.Sort(CompareRows);
+    return sorted;
+}
