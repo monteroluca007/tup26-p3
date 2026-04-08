@@ -1,98 +1,97 @@
+// sortx.cs — Herramienta CLI para ordenar archivos delimitados
+// Uso: dotnet run sortx.cs -- [input [output]] [-b campo[:tipo[:orden]]]... [opciones]
 
-// sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
-//       [-i|--input input] [-o|--output output]
-//       [-d|--delimiter delimitador]
-//       [-nh|--no-header] [-h|--help]
-
-using System.Net;
-using System.Security.AccessControl;
-using System.Xml;
-using Microsoft.VisualBasic.FileIO;
-
-Console.WriteLine($"sortx {string.Join(" ", args)}");
-AppConfig parseargs(string[] args)
+try
 {
-    string? inputFile = null;
-    string? outputFile = null;
-    string delimiter = ",";
-    bool help = false;
-    bool noHeader = false;
-    List<SortField> sortFields = new List<SortField>();
-    int positional = 0;
-    sortFields parseSoftfield(string spec)
+    AppConfig ParseArgs(string[] args)
     {
-        var parts = spec.split(',');
-        string name = parts[0];
-        bool numeric = parts.length > 1 && parts[1].equals("num", StringComparison.OrdinalIgnoreCase);
-        bool descending = parts.length > 2 && parts[2].equals("desc", StringComparison.OrdinalIgnoreCase);
-        return new SortField(name, numeric, descending);
+        string? inputFile = null;
+        string? outputFile = null;
+        string delimiter = ",";
+        bool noHeader = false;
+        bool showHelp = false;
+        List<SortField> sortFields = new();
+        int positional = 0;
+
+        SortField ParseSortField(string spec)
+        {
+            var parts = spec.Split(':');
+            string name = parts[0];
+            bool numeric = parts.Length > 1 && parts[1].Equals("num", StringComparison.OrdinalIgnoreCase);
+            bool descending = parts.Length > 2 && parts[2].Equals("desc", StringComparison.OrdinalIgnoreCase);
+            return new SortField(name, numeric, descending);
+        }
+
+        for (int i = 0; i < args.Length; i++)
+        {
+            string arg = args[i];
+
+            if (arg == "--ayuda" || arg == "-ay")
+            {
+                showHelp = true;
+                continue;
+            }
+            if (arg == "--no-header" || arg == "-nh")
+            {
+                noHeader = true;
+                continue;
+            }
+            if (arg == "--by" || arg == "-b")
+            {
+                if (i + 1 >= args.Length)
+                    throw new ArgumentException($"La opción '{arg}' requiere un valor.");
+                sortFields.Add(ParseSortField(args[++i]));
+                continue;
+            }
+            if (arg == "--input" || arg == "-i")
+            {
+                if (i + 1 >= args.Length)
+                    throw new ArgumentException($"La opción '{arg}' requiere un valor.");
+                inputFile = args[++i];
+                continue;
+            }
+            if (arg == "--output" || arg == "-o")
+            {
+                if (i + 1 >= args.Length)
+                    throw new ArgumentException($"La opción '{arg}' requiere un valor.");
+                outputFile = args[++i];
+                continue;
+            }
+            if (arg == "--delimiter" || arg == "-d")
+            {
+                if (i + 1 >= args.Length)
+                    throw new ArgumentException($"La opción '{arg}' requiere un valor.");
+                string raw = args[++i];
+                delimiter = raw == @"\t" ? "\t" : raw;
+                continue;
+            }
+            if (!arg.StartsWith('-'))
+            {
+                if (positional == 0) { inputFile = arg; positional++; }
+                else if (positional == 1) { outputFile = arg; positional++; }
+                else throw new ArgumentException($"Argumento posicional inesperado: '{arg}'.");
+                continue;
+            }
+
+            throw new ArgumentException($"Opción desconocida: '{arg}'.");
+        }
+
+        return new AppConfig(inputFile, outputFile, delimiter, noHeader, showHelp, sortFields);
     }
 
-    for (int i = 0; i < args.Length; i++)
+
+    string ReadInput(AppConfig cfg)
     {
-        string arg = args[i];
-
-        if (arg == "-ay" || arg == "--ayuda") ;
-        showhelp() = true;
-        continue;
-        if (args == --noheader || args == -nh) ;
-        {
-            noheader = true;
-            continue;
-        }
-        if (arg == -by || arg == -b) ;
-        {
-            if (i + 1 >= args.Length)
-                throw new ArgumentException($"La opcion '(arg)' requiere un valor.");
-            SortField.Add(ParseSortField(args[++i]));
-            continue;
-        }
-        if (arg == "--input" || arg == "-i")
-        {
-            if (i + 1 >= args.Length)
-                throw new ArgumentException($"La opcion '(arg)' requiere un valor.");
-            inputFile = args[++i];
-            continue;
-        }
-        if (arg == "--output" || arg == "-o")
-        {
-            if (i + 1 >= args.Length)
-                throw new ArgumentException($"La opcion '(arg)' requiere un valor.");
-            outputFile = args[++i];
-            continue;
-        }
-        if (arg == "--delimiter" || arg == "-d")
-        {
-            if (i + 1 >= args.Length)
-                throw new ArgumentException($"La opcion '(arg)' requiere un valor.");
-            string raw = args[++i];
-            delimiter = raw == @"\t" ? "\t" : raw;
-            continue;
-        }
-        if (!arg.StartsWith('-'))
-        {
-            if (positional == 0) { inputFile = arg; positional++; }
-            else if (positional == 1) { outputFile = arg; positional++; }
-            else throw new ArgumentException($"Argumento posicional inesperado: '{arg}'.");
-            continue;
-        }
-        throw new ArgumentException($"Opción desconocida: '{arg}'.");
+        if (cfg.InputFile is not null)
+            return File.ReadAllText(cfg.InputFile);
+        return Console.In.ReadToEnd();
     }
-    return new AppConfig(inputFile, outputFile, delimiter, noHeader, showHelp, sortFields);
-}
 
-string ReadInput(AppConfig cfg)
-{
-    if (cfg.InputFile is not null)
-        return File.ReadAllText(cfg.InputFile);
-    return Console.In.ReadToEnd();
-}
-
-(List<Dictionary<string, string>> Rows, string[]? Headers) ParseDelimited(string text, AppConfig cfg)
+    (List<Dictionary<string, string>> Rows, string[]? Headers) ParseDelimited(string text, AppConfig cfg)
     {
         var lines = text
             .Replace("\r\n", "\n")
-            .Replace("\r",   "\n")
+            .Replace("\r", "\n")
             .Split('\n')
             .Where(l => l.Length > 0)
             .ToArray();
@@ -101,26 +100,25 @@ string ReadInput(AppConfig cfg)
             return (new List<Dictionary<string, string>>(), null);
 
         string[]? headers;
-        int       dataStart;
+        int dataStart;
 
         if (!cfg.NoHeader)
         {
-            headers   = lines[0].Split(cfg.Delimiter);
+            headers = lines[0].Split(cfg.Delimiter);
             dataStart = 1;
         }
         else
         {
-            headers   = null;
+            headers = null;
             dataStart = 0;
         }
 
         var rows = new List<Dictionary<string, string>>();
 
-
         for (int lineIdx = dataStart; lineIdx < lines.Length; lineIdx++)
         {
             var values = lines[lineIdx].Split(cfg.Delimiter);
-            var row    = new Dictionary<string, string>();
+            var row = new Dictionary<string, string>();
 
             if (!cfg.NoHeader && headers is not null)
             {
@@ -136,7 +134,6 @@ string ReadInput(AppConfig cfg)
             rows.Add(row);
         }
 
-        // Validar que los campos de --by existen
         if (cfg.SortFields.Count > 0 && rows.Count > 0)
         {
             foreach (var sf in cfg.SortFields)
@@ -149,10 +146,14 @@ string ReadInput(AppConfig cfg)
                 }
             }
         }
+
         return (rows, headers);
     }
 
-List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,List<SortField> sortFields)
+
+    List<Dictionary<string, string>> SortRows(
+        List<Dictionary<string, string>> rows,
+        List<SortField> sortFields)
     {
         if (sortFields.Count == 0 || rows.Count == 0)
             return rows;
@@ -168,10 +169,10 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
         IOrderedEnumerable<Dictionary<string, string>> ordered =
             (first.Numeric, first.Descending) switch
             {
-                (true,  true)  => rows.OrderByDescending(r => NumKey(r, first.Name)),
-                (true,  false) => rows.OrderBy(r => NumKey(r, first.Name)),
-                (false, true)  => rows.OrderByDescending(r => r[first.Name],StringComparer.OrdinalIgnoreCase),
-                (false, false) => rows.OrderBy(r => r[first.Name],StringComparer.OrdinalIgnoreCase),
+                (true, true) => rows.OrderByDescending(r => NumKey(r, first.Name)),
+                (true, false) => rows.OrderBy(r => NumKey(r, first.Name)),
+                (false, true) => rows.OrderByDescending(r => r[first.Name], StringComparer.OrdinalIgnoreCase),
+                (false, false) => rows.OrderBy(r => r[first.Name], StringComparer.OrdinalIgnoreCase),
             };
 
         for (int i = 1; i < sortFields.Count; i++)
@@ -179,16 +180,21 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
             SortField sf = sortFields[i];
             ordered = (sf.Numeric, sf.Descending) switch
             {
-                (true,  true)  => ordered.ThenByDescending(r => NumKey(r, sf.Name)),
-                (true,  false) => ordered.ThenBy(r => NumKey(r, sf.Name)),
-                (false, true)  => ordered.ThenByDescending(r => r[sf.Name],StringComparer.OrdinalIgnoreCase),
-                (false, false) => ordered.ThenBy(r => r[sf.Name],StringComparer.OrdinalIgnoreCase),
+                (true, true) => ordered.ThenByDescending(r => NumKey(r, sf.Name)),
+                (true, false) => ordered.ThenBy(r => NumKey(r, sf.Name)),
+                (false, true) => ordered.ThenByDescending(r => r[sf.Name], StringComparer.OrdinalIgnoreCase),
+                (false, false) => ordered.ThenBy(r => r[sf.Name], StringComparer.OrdinalIgnoreCase),
             };
         }
+
         return ordered.ToList();
     }
 
- string Serialize(List<Dictionary<string, string>> rows,string[]? headers,AppConfig cfg)
+
+    string Serialize(
+        List<Dictionary<string, string>> rows,
+        string[]? headers,
+        AppConfig cfg)
     {
         var sb = new System.Text.StringBuilder();
 
@@ -213,7 +219,8 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
         return sb.ToString();
     }
 
-void WriteOutput(string text, AppConfig cfg)
+
+    void WriteOutput(string text, AppConfig cfg)
     {
         if (cfg.OutputFile is not null)
             File.WriteAllText(cfg.OutputFile, text);
@@ -221,7 +228,7 @@ void WriteOutput(string text, AppConfig cfg)
             Console.Write(text);
     }
 
-void ShowHelp()
+    void ShowHelp()
     {
         Console.WriteLine("""
         sortx — Ordena archivos de texto delimitados (CSV, TSV, PSV, etc.)
@@ -239,7 +246,7 @@ void ShowHelp()
           -d, --delimiter <delim>         Delimitador         (default: ,).
                                             Usar \t para tabulación.
           -nh, --no-header                Sin encabezado; campos por índice (0, 1, 2...).
-          -h,  --help                     Muestra esta ayuda y termina.
+          -ay,  --ayuda                     Muestra esta ayuda y termina.
 
         EJEMPLOS:
           sortx empleados.csv -b apellido
@@ -252,13 +259,36 @@ void ShowHelp()
         """);
     }
 
+    var config = ParseArgs(args);
 
+    if (config.ShowHelp)
+    {
+        ShowHelp();
+        return; 
+    }
 
-
-
-
-
-
+    var rawText = ReadInput(config);
+    var (rows, headers) = ParseDelimited(rawText, config);
+    var sortedRows = SortRows(rows, config.SortFields);
+    var output = Serialize(sortedRows, headers, config);
+    WriteOutput(output, config);
+}
+catch (ArgumentException ex)
+{
+    Console.Error.WriteLine($"Error de argumentos: {ex.Message}");
+    Console.Error.WriteLine("Use --help para ver la ayuda.");
+    Environment.Exit(1);
+}
+catch (FileNotFoundException ex)
+{
+    Console.Error.WriteLine($"Error: Archivo no encontrado — {ex.FileName}");
+    Environment.Exit(1);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error inesperado: {ex.Message}");
+    Environment.Exit(1);
+}
 
 record SortField(string Name, bool Numeric, bool Descending);
 
@@ -267,5 +297,6 @@ record AppConfig(
     string? OutputFile,
     string Delimiter,
     bool NoHeader,
+    bool ShowHelp,
     List<SortField> SortFields
 );
