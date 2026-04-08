@@ -85,15 +85,26 @@ try
 
         return new AppConfig(inputFile, outputFile, delimiter, noHeader, showHelp, sortFields);
     }
+
+
+string ReadInput(AppConfig cfg)
+{
+    if (cfg.InputFile != null)
+        return File.ReadAllText(cfg.InputFile);
+
+    return Console.In.ReadToEnd();
 }
 
-
-
+}
 catch (Exception ex)
 {
-    Console.Error.WriteLine($"Error: {ex.Message}");
-    Environment.Exit(1);
+    Console.Error.WriteLine($"Error al procesar argumentos: {ex.Message}");
+    return;
 }
+
+
+
+
 
 record SortField(string Name, bool Numeric, bool Descending);
 
