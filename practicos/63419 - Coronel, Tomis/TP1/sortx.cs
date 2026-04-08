@@ -119,8 +119,50 @@ class Program
         }
      
      
+     string leerEntrada(configuracion config)
+     {
+        if (config.ArchivoEntrada != null)
+        {
+            return File.ReadAllText(config.ArchivoEntrada);
+        }
+        else
+        {
+            return Console.In.ReadToEnd();
+        }
+
+        (List<string> encabezado, List<List<string>> filas) parsear(configuracion config, string texto)
+        {
+        
+          var encabezado = new List<string>();
+          var filas = new List<List<string>>();
+
+            if (!config.SinEncabezado)
+            {
+                encabezado = lineas[0].Split(config.delimitador).ToList();
+                  for (int i = 0; i < partesEncabezado.lenght; i++)
+                {
+                    encabezado.Add(partesEncabezado[i]);
+                     inicio=1;
+                }
+            }
+            for (int i = inicio; i < lineas.Length; i++)
+            {
+               string linea = lineas[i].Trim();
+                if (linea == "") continue;
+            }
      
-     
+     string? partes = linea.Split(config.delimitador);
+            var fila = new List<string>();
+            for (int j = 0; j < partes.Length; j++)
+            {
+                fila.Add(partes[j]);
+            }
+            filas.Add(fila);
+        }
+
+        return (encabezado, filas); 
+
+     }
      
      }
 
