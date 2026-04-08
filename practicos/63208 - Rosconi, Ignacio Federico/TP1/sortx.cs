@@ -143,3 +143,15 @@ static List<string> SortData(List<string> lines, AppConfig config)
             .ToList();
     }
 }
+
+static void PrintHelp()
+{
+    Console.WriteLine("Uso:");
+    Console.WriteLine("  sortx --input=archivo.txt --output=salida.txt [--desc]");
+    Console.WriteLine();
+    Console.WriteLine("Opciones:");
+    Console.WriteLine("  --input=RUTA      Archivo de entrada");
+    Console.WriteLine("  --output=RUTA     Archivo de salida");
+    Console.WriteLine("  --desc            Orden descendente");
+    Console.WriteLine("  -h, --help        Mostrar ayuda");
+}
