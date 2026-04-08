@@ -221,6 +221,37 @@ void WriteOutput(string text, AppConfig cfg)
             Console.Write(text);
     }
 
+void ShowHelp()
+    {
+        Console.WriteLine("""
+        sortx — Ordena archivos de texto delimitados (CSV, TSV, PSV, etc.)
+
+        USO:
+          sortx [input [output]] [-b campo[:tipo[:orden]]]... [opciones]
+          dotnet run sortx.cs -- [input [output]] [-b campo[:tipo[:orden]]]... [opciones]
+
+        OPCIONES:
+          -b, --by campo[:tipo[:orden]]   Campo de ordenamiento (repetible).
+                                            tipo  : alpha (default) | num
+                                            orden : asc  (default)  | desc
+          -i, --input  <archivo>          Archivo de entrada  (default: stdin).
+          -o, --output <archivo>          Archivo de salida   (default: stdout).
+          -d, --delimiter <delim>         Delimitador         (default: ,).
+                                            Usar \t para tabulación.
+          -nh, --no-header                Sin encabezado; campos por índice (0, 1, 2...).
+          -h,  --help                     Muestra esta ayuda y termina.
+
+        EJEMPLOS:
+          sortx empleados.csv -b apellido
+          sortx empleados.csv -b salario:num:desc
+          sortx empleados.csv -b departamento -b salario:num:desc
+          sortx empleados.csv resultado.csv -b apellido
+          sortx -i empleados.csv -o resultado.csv -b apellido
+          sortx datos.tsv -d "\t" -nh -b 1:alpha:asc
+          cat empleados.csv | sortx -b apellido > ordenado.csv
+        """);
+    }
+
 
 
 
