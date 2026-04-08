@@ -233,6 +233,29 @@ int Compare(
     return 0;
 }
 
+string Serialize(
+    string[] headers,
+    List<Dictionary<string, string>> rows,
+    AppConfig config)
+{
+    var sb = new StringBuilder();
+
+    if (!config.NoHeader)
+        sb.AppendLine(string.Join(config.Delimiter, headers));
+
+    for (int i = 0; i < rows.Count; i++)
+    {
+        var row = rows[i];
+        var values = new List<string>();
+
+        for (int j = 0; j < headers.Length; j++)
+            values.Add(row[headers[j]]);
+
+        sb.AppendLine(string.Join(config.Delimiter, values));
+    }
+
+    return sb.ToString();
+}
 
 record SortField(string Name, bool Numeric, bool Descending);
 
