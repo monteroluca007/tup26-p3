@@ -126,3 +126,47 @@ string ReadInput(string? filePath)
 
     return File.ReadAllText(filePath);
 }
+
+(string[] headers, List<Dictionary<string, string>> rows)
+    ParseDelimited(string content, string delimiter, bool noHeader)
+{
+    string[] lines = content.Split('\n');
+
+    int last = lines.Length - 1;
+    while (last >= 0 && lines[last].Trim() == "") last--;
+
+    if (last < 0) return ([], []);
+
+    string[] headers;
+    int dataStart;
+
+    if (noHeader)
+    {
+        int colCount = lines[0].TrimEnd('\r').Split(delimiter).Length;
+        headers   = Enumerable.Range(0, colCount).Select(n => n.ToString()).ToArray();
+        dataStart = 0;
+    }
+    else
+    {
+        headers   = lines[0].TrimEnd('\r').Split(delimiter).Select(h => h.Trim()).ToArray();
+        dataStart = 1;
+    }
+
+    var rows = new List<Dictionary<string, string>>();
+
+    for (int i = dataStart; i <= last; i++)
+    {
+        string line = lines[i].Trim();
+        if (line == "") continue;
+
+        string[] values = line.Split(delimiter);
+        var row = new Dictionary<string, string>();
+
+        for (int col = 0; col < headers.Length; col++)
+            row[headers[col]] = col < values.Length ? values[col].Trim() : "";
+
+        rows.Add(row);
+    }
+
+    return (headers, rows);
+}
