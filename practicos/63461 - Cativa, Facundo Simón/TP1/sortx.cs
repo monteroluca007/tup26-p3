@@ -138,12 +138,44 @@ class Program
 }
 
     static string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
-    {
+{
+    if (rows.Count == 0)
         return "";
+
+    var delimiter = config.Delimiter;
+    var headers = new List<string>(rows[0].Keys);
+
+    var lines = new List<string>();
+
+    if (!config.NoHeader)
+    {
+        lines.Add(string.Join(delimiter, headers));
     }
 
-    static void WriteOutput(string text, AppConfig config)
+    foreach (var row in rows)
+    {
+        var values = new List<string>();
+
+        foreach (var h in headers)
+        {
+            values.Add(row.ContainsKey(h) ? row[h] : "");
+        }
+
+        lines.Add(string.Join(delimiter, values));
+    }
+
+    return string.Join("\n", lines);
+}
+
+   static void WriteOutput(string text, AppConfig config)
+{
+    if (!string.IsNullOrEmpty(config.OutputFile))
+    {
+        File.WriteAllText(config.OutputFile, text);
+    }
+    else
     {
         Console.WriteLine(text);
     }
+}
 }
