@@ -87,6 +87,25 @@ void PrintHelp()
     Console.WriteLine("Uso: sortx [input [output]] -b campo[:tipo[:orden]]");
 }
 
+string Next(string[] args, ref int i, string opt)
+{
+    i++;
+    if (i >= args.Length)
+        throw new Exception($"{opt} requiere valor");
+    return args[i++];
+}
+
+SortField ParseSortField(string text)
+{
+    var parts = text.Split(':');
+
+    string name = parts[0];
+    bool numeric = parts.Length > 1 && parts[1] == "num";
+    bool desc = parts.Length > 2 && parts[2] == "desc";
+
+    return new SortField(name, numeric, desc);
+}
+
 
 record SortField(string Name, bool Numeric, bool Descending);
 
