@@ -32,7 +32,7 @@ AppConfig parseargs(string[] args)
     {
         string arg = args[i];
 
-        if (arg == "-h" || arg == "--help") ;
+        if (arg == "-ay" || arg == "--ayuda") ;
         showhelp() = true;
         continue;
         if (args == --noheader || args == -nh) ;
@@ -116,6 +116,7 @@ string ReadInput(AppConfig cfg)
 
         var rows = new List<Dictionary<string, string>>();
 
+
         for (int lineIdx = dataStart; lineIdx < lines.Length; lineIdx++)
         {
             var values = lines[lineIdx].Split(cfg.Delimiter);
@@ -151,8 +152,41 @@ string ReadInput(AppConfig cfg)
         return (rows, headers);
     }
 
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,List<SortField> sortFields)
+    {
+        if (sortFields.Count == 0 || rows.Count == 0)
+            return rows;
 
+        double NumKey(Dictionary<string, string> row, string name) =>
+            double.TryParse(row[name],
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out double d) ? d : 0.0;
 
+        SortField first = sortFields[0];
+
+        IOrderedEnumerable<Dictionary<string, string>> ordered =
+            (first.Numeric, first.Descending) switch
+            {
+                (true,  true)  => rows.OrderByDescending(r => NumKey(r, first.Name)),
+                (true,  false) => rows.OrderBy(r => NumKey(r, first.Name)),
+                (false, true)  => rows.OrderByDescending(r => r[first.Name],StringComparer.OrdinalIgnoreCase),
+                (false, false) => rows.OrderBy(r => r[first.Name],StringComparer.OrdinalIgnoreCase),
+            };
+
+        for (int i = 1; i < sortFields.Count; i++)
+        {
+            SortField sf = sortFields[i];
+            ordered = (sf.Numeric, sf.Descending) switch
+            {
+                (true,  true)  => ordered.ThenByDescending(r => NumKey(r, sf.Name)),
+                (true,  false) => ordered.ThenBy(r => NumKey(r, sf.Name)),
+                (false, true)  => ordered.ThenByDescending(r => r[sf.Name],StringComparer.OrdinalIgnoreCase),
+                (false, false) => ordered.ThenBy(r => r[sf.Name],StringComparer.OrdinalIgnoreCase),
+            };
+        }
+        return ordered.ToList();
+    }
 
 
 
