@@ -115,3 +115,14 @@ SortField ParseSortField(string spec)
 
     return new SortField(name, numeric, descending);
 }
+
+string ReadInput(string? filePath)
+{
+    if (filePath == null)
+        return Console.In.ReadToEnd();
+
+    if (!File.Exists(filePath))
+        throw new FileNotFoundException($"Archivo no encontrado: '{filePath}'");
+
+    return File.ReadAllText(filePath);
+}
