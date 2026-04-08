@@ -1,7 +1,16 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
-// sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
-//       [-i|--input input] [-o|--output output]
-//       [-d|--delimiter delimitador]
-//       [-nh|--no-header] [-h|--help]
+try
+{
+    Console.WriteLine("Programa sortx iniciado");
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine("Error: " + ex.Message);
+}
 
-Console.WriteLine($"sortx {string.Join(" ", args)}");
+record CampoOrden(string Nombre, bool EsNumero, bool Desc);
+record Config( string Entrada, string Salida, string Delimitador, bool SinEncabezado, List<CampoOrden> Campos );
