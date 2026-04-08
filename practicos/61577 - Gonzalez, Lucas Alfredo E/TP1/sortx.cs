@@ -114,9 +114,10 @@ class Program
 
         var encabezado = config.TieneEncabezado ? lineas[0] : null;
         var datos = config.TieneEncabezado ? lineas.Skip(1).ToList() : lineas;
+        var encabezadoArray = config.TieneEncabezado ? lineas[0].Split(config.Delimitador) : null;
 
         // Ordenar datos
-        datos.Sort((a, b) => CompararLineas(a, b, config));
+        datos.Sort((a, b) => CompararLineas(a, b, config, encabezadoArray));
 
         var resultado = new List<string>();
         if (encabezado != null) resultado.Add(encabezado);
@@ -124,14 +125,14 @@ class Program
         return resultado;
     }
 
-    static int CompararLineas(string a, string b, Configuracion config)
+    static int CompararLineas(string a, string b, Configuracion config, string[] encabezadoArray)
     {
         var camposA = a.Split(config.Delimitador);
         var camposB = b.Split(config.Delimitador);
 
         foreach (var criterio in config.CriteriosOrdenamiento)
         {
-            int indice = ObtenerIndiceCampo(criterio.Campo, config.TieneEncabezado ? camposA : null);
+            int indice = ObtenerIndiceCampo(criterio.Campo, encabezadoArray);
             if (indice < 0 || indice >= camposA.Length || indice >= camposB.Length) continue;
 
             int comparacion = CompararCampos(camposA[indice], camposB[indice], criterio.Tipo);
