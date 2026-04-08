@@ -1,7 +1,30 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.Serialization;
 
-// sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
-//       [-i|--input input] [-o|--output output]
-//       [-d|--delimiter delimitador]
-//       [-nh|--no-header] [-h|--help]
 
-Console.WriteLine($"sortx {string.Join(" ", args)}");
+record SortField(string name, bool Numeric, bool Descending);
+record AppConfig(
+    string? InputFile,
+    string? OutputFile,
+    string Delimiter,
+    bool NoHeader,
+    List<SortField> SortFields);
+
+
+try
+{
+    var config = ParseArgs(args);
+    var input = ReadInput(config);
+    var rows = ParseDelimited(input, config, out string[] header);
+    var sortedRows = SortRows(rows, header, config);
+    var output = Serialize(sortedRows, header, config);
+    WriteOutput(output, config);
+
+} catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error : {ex.Message}");
+    Environment.Exit(1);
+}
