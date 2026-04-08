@@ -97,4 +97,60 @@ class Program
     {
         File.WriteAllLines(archivo, lineas);
     }
+
+    static List<string> OrdenarLineas(List<string> lineas, Configuracion config)
+    {
+        if (lineas.Count == 0) return lineas;
+
+        var encabezado = config.TieneEncabezado ? lineas[0] : null;
+        var datos = config.TieneEncabezado ? lineas.Skip(1).ToList() : lineas;
+
+        // Ordenar datos
+        datos.Sort((a, b) => CompararLineas(a, b, config));
+
+        var resultado = new List<string>();
+        if (encabezado != null) resultado.Add(encabezado);
+        resultado.AddRange(datos);
+        return resultado;
+    }
+
+    static int CompararLineas(string a, string b, Configuracion config)
+    {
+        var camposA = a.Split(config.Delimitador);
+        var camposB = b.Split(config.Delimitador);
+
+        foreach (var criterio in config.CriteriosOrdenamiento)
+        {
+            int indice = ObtenerIndiceCampo(criterio.Campo, config.TieneEncabezado ? camposA : null);
+            if (indice < 0 || indice >= camposA.Length || indice >= camposB.Length) continue;
+
+            int comparacion = CompararCampos(camposA[indice], camposB[indice], criterio.Tipo);
+            if (comparacion != 0)
+            {
+                return criterio.Orden == "desc" ? -comparacion : comparacion;
+            }
+        }
+        return 0;
+    }
+
+    static int ObtenerIndiceCampo(string campo, string[] encabezado)
+    {
+        if (encabezado == null)
+        {
+            return int.TryParse(campo, out int indice) ? indice : -1;
+        }
+        return Array.IndexOf(encabezado, campo);
+    }
+
+    static int CompararCampos(string a, string b, string tipo)
+    {
+        if (tipo == "num")
+        {
+            if (double.TryParse(a, out double numA) && double.TryParse(b, out double numB))
+            {
+                return numA.CompareTo(numB);
+            }
+        }
+        return string.Compare(a, b, StringComparison.OrdinalIgnoreCase);
+    }
 }
