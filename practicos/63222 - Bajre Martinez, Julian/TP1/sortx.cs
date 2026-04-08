@@ -1,138 +1,141 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System.Linq;
 using System.IO;
 
-// Definicion de Funciones
 
-AppConfig ParseArgs(string[] arguments)
+try
 {
-    string? input = null;
-    string? output = null;
-    string delim = ",";
-    bool noHeader = false;
-    List<SortField> sortFields = new();
+    var config = ParsearArgumentos(args);
+    var texto = LeerEntrada(config);
+    var filas = ParsearDelimitado(texto, config);
+    var filasOrdenadas = OrdenarFilas(filas, config);
+    var salida = Serializar(filasOrdenadas, config);
+    EscribirSalida(config, salida);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine(ex.Message);
+    Environment.Exit(1);
+}
 
-    for (int i = 0; i < arguments.Length; i++)
+ConfiguracionApp ParsearArgumentos(string[] args)
+{
+    string? archivoEntrada = null;
+    string? archivoSalida = null;
+    string delimitador = ",";
+    bool sinEncabezado = false;
+    var camposOrden = new List<CampoOrden>();
+
+    int cantidadPosicionales = 0;
+
+    for (int i = 0; i < args.Length; i++)
     {
-        string arg = arguments[i];
-
-        switch (arg)
+        switch (args[i])
         {
-            case "-h":
-            case "--help":
-                ShowHelp();
-                Environment.Exit(0);
-                break;
-
-            case "-d":
-            case "--delimiter":
-                delim = GetNextArg(arguments, ref i, "delimitador");
-                break;
-
-            case "-nh":
-            case "--no-header":
-                noHeader = true;
-                break;
-
-            case "-b":
-            case "--by":
-                string rawBy = GetNextArg(arguments, ref i, "campo de orden");
-                sortFields.Add(ParseSortField(rawBy));
-                break;
-
             case "-i":
             case "--input":
-                input = GetNextArg(arguments, ref i, "archivo de entrada");
+                archivoEntrada = args[++i];
                 break;
 
             case "-o":
             case "--output":
-                output = GetNextArg(arguments, ref i, "archivo de salida");
+                archivoSalida = args[++i];
+                break;
+
+            case "-d":
+            case "--delimiter":
+                var d = args[++i];
+                delimitador = d == "\\t" ? "\t" : d;
+                break;
+
+            case "-nh":
+            case "--no-header":
+                sinEncabezado = true;
+                break;
+
+            case "-h":
+            case "--help":
+                MostrarAyuda();
+                Environment.Exit(0);
+                break;
+
+            case "-b":
+            case "--by":
+                var partes = args[++i].Split(':');
+
+                string nombre = partes[0];
+                bool esNumerico = partes.Length > 1 && partes[1] == "num";
+                bool descendente = partes.Length > 2 && partes[2] == "desc";
+
+                camposOrden.Add(new CampoOrden(nombre, esNumerico, descendente));
                 break;
 
             default:
-                if (!arg.StartsWith("-"))
+                if (!args[i].StartsWith("-"))
                 {
-                    if (input == null) input = arg;
-                    else if (output == null) output = arg;
-                }
-                else
-                {
-                    throw new ArgumentException($"Opción desconocida: {arg}");
+                    if (cantidadPosicionales == 0)
+                        archivoEntrada = args[i];
+                    else if (cantidadPosicionales == 1)
+                        archivoSalida = args[i];
+
+                    cantidadPosicionales++;
                 }
                 break;
         }
     }
 
-    return new AppConfig(input, output, delim, noHeader, sortFields);
+    if (camposOrden.Count == 0)
+        throw new Exception("Debe especificar al menos un campo de ordenamiento (-b)");
+
+    return new ConfiguracionApp(
+        archivoEntrada,
+        archivoSalida,
+        delimitador,
+        sinEncabezado,
+        camposOrden
+    );
 }
 
-string GetNextArg(string[] args, ref int index, string nombre)
+string LeerEntrada(ConfiguracionApp config)
 {
-    if (index + 1 >= args.Length)
-        throw new ArgumentException($"Falta valor para {nombre}");
+    if (config.ArchivoEntrada != null)
+        return File.ReadAllText(config.ArchivoEntrada);
 
-    return args[++index];
+    return Console.In.ReadToEnd();
 }
-
-SortField ParseSortField(string raw)
+List<Dictionary<string, string>>ParsearDelimitado(string texto, ConfiguracionApp config)
 {
-    string[] parts = raw.Split(':');
-
-    if (parts.Length == 0 || string.IsNullOrWhiteSpace(parts[0]))
-        throw new ArgumentException($"Campo inválido en -b: {raw}");
-
-    string name = parts[0];
-    bool isNumeric = parts.Length > 1 && parts[1].ToLower() == "num";
-    bool isDesc = parts.Length > 2 && parts[2].ToLower() == "desc";
-
-    return new SortField(name, isNumeric, isDesc);
-}
-
-void ShowHelp()
-{
-    Console.WriteLine("Uso:");
-    Console.WriteLine("  sortx [input] [output] [opciones]");
-    Console.WriteLine("");
-    Console.WriteLine("Opciones:");
-    Console.WriteLine("  -b campo:tipo:orden   Ej: edad:num:desc");
-    Console.WriteLine("  -d delimitador        Ej: , | ;");
-    Console.WriteLine("  -nh                   Sin cabecera");
-}
-
-// Definicion de Estructuras de Datos
-
-record SortField(string Name, bool Numeric, bool Descending);
-
-record AppConfig(
-    string? InputFile,
-    string? OutputFile,
-    string Delimiter,
-    bool NoHeader,
-    List<SortField> SortFields
-);
-string ReadInput(AppConfig config)
-{
-    if (config.InputFile != null)
-        return File.ReadAllText(config.InputFile);
+    var lineas = texto.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(l => l.TrimEnd('\r')).ToArray();
+    if (lineas.Length == 0)
+        throw new Exception("No se encontraron datos de entrada.");
+        string[] encabezados;
+        int inicio = 0;
+    if (!config.SinEncabezado)
+    {
+        encabezados = lineas[0].Split(config.Delimitador);
+        inicio = 1;
+    }
     else
-        return Console.In.ReadToEnd();
-}
+    {
+        int cantidadCampos = lineas[0].Split(config.Delimitador).Length;
+        encabezados = Enumerable.Range(0, cantidadCampos).Select(i => i.ToString()).ToArray();       
+    }
 
-// Punto de Entrada
+    var filas = new List<Dictionary<string, string>>();
+    for (int i = inicio; i < lineas.Length; i++)
+    {
+        var valores = lineas[i].Split(config.Delimitador);
+        if (valores.Length != encabezados.Length)
+            throw new Exception($"La fila {i + 1} tiene una cantidad de campos diferente al encabezado.");
 
-try
-{
-    var config = ParseArgs(args);
-    var text = ReadInput(config);
-    var rows = ParseDelimited(text, config);
-    var sorted = SortRows(rows, config);
-    var output = Serialize(sorted, config);
-    WriteOutput(config, output);
-}
-catch (Exception ex)
-{
-    Console.Error.WriteLine($"Error: {ex.Message}");
-    Environment.Exit(1);
+        var fila = new Dictionary<string, string>();
+        for (int j = 0; j < encabezados.Length; j++)
+        {
+            fila[encabezados[j]] = valores[j];
+        }
+        filas.Add(fila);
+    }
+    return filas;
+
 }
