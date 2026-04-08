@@ -9,6 +9,7 @@ using Microsoft.VisualBasic.FileIO;
 
 Console.WriteLine($"sortx {string.Join(" ", args)}");
 
+
 // este appconfig guarda los datos temporalmente, a diferencia del record que los toma al final
 AppConfig parseargs(string[] args)
 {
@@ -106,12 +107,12 @@ string readinput(AppConfig cfg)
 // lista de fila y encabezado en base al texto de archivo cfg
 (List<Dictionary<string,string>> rows,string[]? Header) parsedelimited (string text, AppConfigconfig cfg)
 {
-    var lines =text
-    .Replace ("\r\n", "\n")
-    .Replace ("\r", "\n")
-    .Split('\n')
-    .Where(l => l.Length > 0)
-    .ToArray();
+    // el templines va a tener todsas las lineas incluyendo las vacias tambien, despues con el split separa en lineas y por ultimo se eliminan las lineas vacias.
+  var tempLines = text
+    .Replace("\r\n", "\n")
+    .Replace("\r", "\n")
+    .Split('\n');
+string[] lines = Array.FindAll(tempLines, l => l.Length > 0);
 }
 
     if (lines.length == 0)
@@ -132,6 +133,9 @@ string readinput(AppConfig cfg)
        headers = null;
        dataStart = 0;
     }
+
+    
+
 
 
 
