@@ -115,6 +115,25 @@ Ejemplos:
   sortx empleados.csv -b salario:num:desc
 ");
 }
+
+string ReadInput(AppConfig config)
+{
+    // Si hay archivo → leer archivo
+    if (!string.IsNullOrEmpty(config.InputFile))
+    {
+        if (!File.Exists(config.InputFile))
+            throw new Exception($"Archivo no encontrado: {config.InputFile}");
+
+        return File.ReadAllText(config.InputFile);
+    }
+
+    // Si no hay archivo → leer stdin
+    if (!Console.IsInputRedirected)
+        throw new Exception("No se especificó archivo de entrada ni hay datos en stdin");
+
+    using var reader = Console.In;
+    return reader.ReadToEnd();
+}
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
