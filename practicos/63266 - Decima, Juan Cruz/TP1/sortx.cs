@@ -111,6 +111,30 @@ string LeerEntrada(AppConfig config)
     }
 }
 
+(List<string[]> filas, string[]? encabezados) ParsearDelimitado(string texto, AppConfig config)
+{
+    var lineas = texto.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+    string[]? encabezados = null;
+    int inicioDatos = 0;
+
+    if (!config.NoHeader)
+    {
+        encabezados = lineas[0].Trim().Split(config.Delimiter);
+        inicioDatos = 1;
+    }
+
+    var filas = new List<string[]>();
+
+    for (int i = inicioDatos; i < lineas.Length; i++)
+    {
+        var columnas = lineas[i].Trim().Split(config.Delimiter);
+        filas.Add(columnas);
+    }
+
+    return (filas, encabezados);
+}
+
 
 
 record SortField(string Name, bool Numeric, bool Descending);
