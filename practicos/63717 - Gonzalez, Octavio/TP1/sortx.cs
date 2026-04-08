@@ -1,5 +1,5 @@
 using System;
-using static System.Console; 
+using static System.Console;
 
 
 /*
@@ -22,11 +22,11 @@ Cada valor de `--by` tiene el formato `campo[:tipo[:orden]]`, donde:
 
 - **`campo`** — nombre de la columna (si hay encabezado) o índice numérico desde 0 (si no hay encabezado).
 - **`tipo`** — criterio de comparación:
-  - `alpha` — comparación alfabética (default).
-  - `num` — comparación numérica.
+                             `alpha` — comparación alfabética (default).
+  -                          `num` — comparación numérica.
 - **`orden`** — dirección:
-  - `asc` — ascendente (default).
-  - `desc` — descendente.
+  -                           `asc` — ascendente (default).
+  -                           `desc` — descendente.
 
 
 1. ParseArgs      → leer la configuración desde los argumentos
@@ -42,42 +42,80 @@ Si el archivo de entrada no se especifica, la herramienta debe leer desde stdin.
 Si el archivo de salida no se especifica, la herramienta debe escribir en stdout.
 
 */
+
 try
 {
-    AppConfig configuracion= ParseArgs (args); 
-    string texto = ReadInput(configuracion); 
 
+    AppConfig configuracion = ParseArgs(args); //args son los argumentos que me pasan por consola 
+    string texto = ReadInput(configuracion);
+    List<Dictionary<string, string>> filas = ParseDelimited(texto); //creo la lista diccionario y la igualo a la otra lista.
 }
 catch (Exception e)
 {
-    Error.WriteLine("Error encontrado:"+ e.Message);
-    Environment.Exit(1); // avisamos que el programa fallo 
+    Error.WriteLine("Error encontrado:" + e.Message);
+    Environment.Exit(1); // aviso que el programa fallo 
 }
 
-
-AppConfig ParseArgs(string[] args) {
-
- string? entrada = Console.ReadLine();   
-    
-}; //Retornara el record AppConfig la funcion es ParseArgs 
-
-static string ReadInput (string? configuracion)
+static AppConfig ParseArgs(string[] argumentos)
 {
-    if (configuracion.Entrada!= null)
+    string? entrada = null ; 
+    string? Salida = null; 
+    string Delimitador = ","; 
+    bool noheader = false; 
+    List<SortField> sortfields = new List<SortField>();
+
+
+     for (int i=0; i<argumentos.Length; i++) //va recorriendo todos los argumentos y hace las validaciones, si cumple, guarda lo que viene despues 
+    {
+        if (argumentos[i] == "-i") entrada=argumentos[i+1]; 
+        if (argumentos[i] == "-o") Salida=argumentos[i+1];
+        if (argumentos[i] == "-d") Delimitador=argumentos[i+1];
+        if (argumentos[i] == "-b")
+        {
+            string[] partes= argumentos[++i].Split(':');
+
+            string nombre = partes[0];
+            bool num=false;
+            bool desc=false;
+            bool asc=false;
+            for (int j=1; j<partes.Length; j++)
+            {
+                if (partes[j]=="num") num=true;
+                if (partes[j]=="desc") desc=true;
+                if (partes[j]=="asc") asc=true;
+            }
+
+            sortfields.Add(new SortField(nombre, num, desc, asc));
+
+        }
+        ;
+        if (argumentos[i] == "-nh") ;
+        if (argumentos[i] == "-h") ;
+
+    }
+     
+
+
+}
+; //Retornara el record AppConfig la funcion es ParseArgs 
+
+static string ReadInput(AppConfig configuracion) // Me lee las entradas detexto, valida y escupe un string que se guarda en texto
+{
+    if (configuracion.Entrada != null)
     {
         return File.ReadAllText(configuracion.Entrada);
     }
     else
     {
-        return Console.ReadLine();
+        return In.ReadToEnd();
     }
 }
 
+record SortField(string nombre, bool num, bool desc, bool asc); // campo por el que ordena. 
+record AppConfig(string? Entrada, string? Salida, string Delimitador, bool noheader, List<SortField> sortfields);
 
 
 
 
 
-record SortField (string Nombre, bool Numero, bool Descendente); // campo por el que ordena. 
-record AppConfig (string? Entrada, string? Salida, string Delimitador, bool noheader, List<SortField> sortfields);
 
