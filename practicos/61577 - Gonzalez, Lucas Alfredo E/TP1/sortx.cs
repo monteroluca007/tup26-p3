@@ -27,7 +27,17 @@ class Program
             return;
         }
 
-        // Aqui va el resto del codigo
+        // Parsear argumentos
+        var config = ParsearArgumentos(args);
+
+        // Leer el archivo
+        var lineas = LeerArchivo(config.ArchivoEntrada);
+
+        // Ordenar las lineas
+        var lineasOrdenadas = OrdenarLineas(lineas, config);
+
+        // Escribir el resultado
+        EscribirArchivo(config.ArchivoSalida, lineasOrdenadas);
     }
 
     static void MostrarAyuda()
