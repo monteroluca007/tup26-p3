@@ -137,5 +137,39 @@ List<Dictionary<string, string>>ParsearDelimitado(string texto, ConfiguracionApp
         filas.Add(fila);
     }
     return filas;
-
 }
+
+List<Dictionary<string, string>> OrdenarFilas(List<Dictionary<string, string>> filas, configuracionApp config)
+{
+    IOrderedEnumerable<Dictionary<string, string>>? filasOrdenadas = null;
+
+    foreach (var campo in config.CamposOrden)
+    {
+        if (!filas[0].ContainsKey(campo.Nombre))
+            throw new Exception($"El campo de ordenamiento '{campo.Nombre}' no existe en los datos.");
+
+        Func<Dictionary<string, string>, object> selector = fila =>
+        {
+            var valor = fila[campo.Nombre];
+            if (campo.EsNumerico)
+            return double.Parse(valor);
+            return valor;
+        };
+
+        if (filasOrdenadas == null)
+        {
+            filasOrdenadas = campo.Descendente
+                ? filas.OrderByDescending(selector)
+                : filas.OrderBy(selector);
+        }
+        else
+        {
+            filasOrdenadas = campo.Descendente
+                ? filasOrdenadas.ThenByDescending(selector)
+                : filasOrdenadas.ThenBy(selector);
+        }
+    }
+
+    return filasOrdenadas?.ToList() ?? filas;
+}
+
