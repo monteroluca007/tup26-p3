@@ -4,6 +4,7 @@
 //       [-d|--delimiter delimitador]
 //       [-nh|--no-header] [-h|--help]
 
+using System.Drawing;
 using System.Net.Http.Headers;
 using Microsoft.VisualBasic.FileIO;
 
@@ -105,8 +106,8 @@ string readinput(AppConfig cfg)
     return Console.In.ReadToEnd(); 
 }
 // lista de fila y encabezado en base al texto de archivo cfg
-(List<Dictionary<string,string>> rows, string[]? Header) parsedelimited(string text, AppConfig cfg)
-{
+(List<Dictionary<string,string>> rows, string[]? Header) parsedelimited(string text, AppConfig cfg);
+
     // el templines va a tener todas las lineas incluyendo las vacias tambien, despues con el split separa en lineas y por ultimo se eliminan las lineas vacias.
     var tempLines = text
         .Replace("\r\n", "\n")
@@ -156,7 +157,7 @@ for (int lineIdx = dataStart; lineIdx < lines.Length; lineIdx++) // recorre las 
     rows.Add(row);
 }
     if (cfg.sortFields.Count > 0 && row.Count > 0) //toma en cuenta la cantidad de elementos de sort fields y la cantidad de elementos de row 
-{
+
     var firstrow = rows[0]; // guarda el valor de la primera fila de rows en la variable firstrow
     foreach (var sf in cfg.sortFields) //bucle en donde la variable sf es temporal y toma los datos de cfg sort fields
     {
@@ -177,13 +178,50 @@ for (int lineIdx = dataStart; lineIdx < lines.Length; lineIdx++) // recorre las 
 
     List<Dictionary<string, string>> sortrows( //lista con clave string y valor string que representa los nombres de la fila y datos de estas,sortrows funcion q ordena las filas en base a rows
      List<Dictionary<string, string>> rows, //lista de filas a ordenar
-     List<SortField> sortFields);
+     List<SortField> sortFields) //lista de criterios de ordenamiento
     {
         if (sortFields.Count == 0 || rows.Count == 0) 
-        return rows; // si no hay criterio de ordenamiento o filas devuelve las filas sin ordenar ;
+        return rows; // si no hay criterio de ordenamiento o filas devuelve las filas sin ordenar 
     }
+     rows.Sort((a, b) => // ordenamo lista comparando fila a y b
+ {
+     foreach (var sf in sortFields) // recorremos los criterios de ordenamiento para comparar las filas a y b y se guardan en sf temporalmente
+     {
+         int cmp = 0;  // aqui se guardara e l resultado de la comparacion.
 
-}
+         if (sf.Numeric) 
+         {
+            // creacion de 2 variables a y b para guardar los valores numericos de las filas a y b , se inician en 0 por si no se pueden parsear a numero
+            double va = 0; 
+            double vb = 0; 
+
+             //en caso de ser string se parsean a numero, si no se pueden parsear quedan en 0, se guardan en va y vb.
+            double.TryParse(a[sf.Name], out va); 
+            double.TryParse(b[sf.Name], out vb); 
+
+            cmp = va.CompareTo(vb); // se guarda en cmp el resultado de la comparacion entre las dos variables
+         }
+
+         else
+         {
+            // verificacion de que los valores de a y b no sean null, si son null se ponen como ""  de lo contrario quedan con el valor orig
+             string va = a[sf.Name] ?? ""; 
+             string vb = b[sf.Name] ?? "";
+             cmp = string.Compare(va, vb, StringComparison.Ordinal); // comparacion guardada en cmp
+         }
+
+        if(cmp != 0) // si la comparacion es igual a 0 se debe decidir cual variable va primero, si cmp es distinto de 0 se devuelve el resultado de la comparacion teniendo en cuenta el ordenamiento ascendente o descendente
+        {
+            if (sf.Descending)  // mayor a menor
+                return -cmp;   // devuelve la fila que tenga el valor mayor
+            else
+                return cmp; // lo contrario la menor.
+        }
+     }
+     return 0;
+
+ });
+    return rows;
 
 
 
