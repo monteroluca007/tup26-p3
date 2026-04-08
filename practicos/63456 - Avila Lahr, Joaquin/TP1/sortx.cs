@@ -100,5 +100,41 @@ string LeerEntrada(Configuracion config)
 
     return Console.In.ReadToEnd();
 }
+(List<Dictionary<string, string>>, List<string>?) ParsearTexto(string texto, Configuracion config)
+{
+    var lineas = texto.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                      .Select(l => l.Trim()).ToList();
+
+    if (lineas.Count == 0)
+        throw new Exception("Archivo vacío");
+
+    List<string> encabezados;
+    int inicio = 0;
+    if (!config.SinEncabezado)
+    {
+        encabezados = lineas[0].Split(config.Delimitador).ToList();
+        inicio = 1;
+    }
+    else
+    {
+        int cantidad = lineas[0].Split(config.Delimitador).Length;
+        encabezados = Enumerable.Range(0, cantidad).Select(i => i.ToString()).ToList();
+    }
+    var filas = new List<Dictionary<string, string>>();
+    for (int i = inicio; i < lineas.Count; i++)
+    {
+        var valores = lineas[i].Split(config.Delimitador);
+
+        var dic = new Dictionary<string, string>();
+
+        for (int j = 0; j < encabezados.Count; j++)
+        {
+            dic[encabezados[j]] = j < valores.Length ? valores[j] : "";
+        }
+        filas.Add(dic);
+    }
+    return (filas, config.SinEncabezado ? null : encabezados);
+}
+
 record CampoOrden(string Nombre, bool EsNumero, bool Desc);
 record Configuracion( string? Entrada,string? Salida,string Delimitador,bool SinEncabezado,List<CampoOrden> Campos,bool Ayuda);
