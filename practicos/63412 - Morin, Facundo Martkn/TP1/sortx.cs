@@ -129,6 +129,30 @@ string ReadInput(AppConfig cfg)
     return (rows, headers);
 }
 
+List<Dictionary<string, string>> SortRows(
+    List<Dictionary<string, string>> rows,
+    List<SortField> fields)
+{
+    rows.Sort((a, b) =>
+    {
+        foreach (var f in fields)
+        {
+            int result;
+
+            if (f.Numeric)
+                result = double.Parse(a[f.Name]).CompareTo(double.Parse(b[f.Name]));
+            else
+                result = string.Compare(a[f.Name], b[f.Name]);
+
+            if (result != 0)
+                return f.Descending ? -result : result;
+        }
+        return 0;
+    });
+
+    return rows;
+}
+
 }
 catch (Exception ex)
 {
