@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Globalization;
 using System.Runtime.Serialization;
+using System.Security.Cryptography;
 
 record SortField(string Name,bool Numeric,bool descending);
 record Appconfig(string ?InputFile, string ?OutputFile, char Delimiter, bool NoHeader, List<SortField> Fields);
@@ -62,4 +63,44 @@ Appconfig ParseArgs(string [] a)
     
    }
 return new Appconfig(inputFile,outputFile,delimiter,noHeader,fields);
+}
+
+string ReadInput(Appconfig cfg){try
+}
+return cfg.InputFile==null?Console.In.ReadToEnd():File.ReadAllText(cfg.InputFile);
+catch(Exception ex){Exiterror("Error leyendo entrada; return "";}}
+
+(string [] header List<string[]> rows) ParseDelimited(string text, string delimi, bool noHeader)
+{
+   text=text.Replace("\r\n","\n").Replace("\r","\n");
+   var lines=text.Split('\n';
+   StringSplitOptions.None).Tolist();
+   if(lines.Couunt>0 && lines.Last()=="") lines.RemoveAt(lines.Count-1);
+   if(lines.Count==0) return (Array.Empty<string>(),new List<string[]>());
+
+   var first=lines[0].Split(delimi);
+   StringSplitOptions.None);
+   int cols=first.Length;
+   var rows=new List<string[]>();
+   string [] header;
+
+   if(noHeader) {header=Enumerable.Range(0,cols).Select(n=>n.ToString()).ToArray();
+   rows.Add(Pad(first,cols));
+   }
+   else {header=first;
+   }
+   for(int i=1;i<lines.Count;i++)
+   {
+     rows.Add(Pad(lines[i].Split(delimi,StringSplitOptions.None),cols));
+
+    }
+   return (header,rows);
+}
+string [] Pad(string [] arr, int n)
+{
+   if(arr.Length==n) return arr;
+   var r=new string[n];
+   Array.Copy(arr,r,Math.Min(arr.Length,n));
+   for(int i=arr.Length;i<n;i++) r[i]="";
+   return r;
 }
