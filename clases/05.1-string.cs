@@ -31,31 +31,32 @@ if (int.TryParse("a123", out int n2)) {
 string nombreCompleto = "Pérez, Juan Carlos";
 string[] partes = nombreCompleto.Split(", ");
 
+// Perez, Juan Carlos -> ["Pérez", "Juan Carlos"]
+// Juan Carlos Pérez -> ["Pérez", "Juan Carlos"]
+// Pérez -> ["Pérez", ""]
+
 (string apellido, string nombre) SepararNombreApellido(string nombreCompleto) {
     if(nombreCompleto.Contains(", ")) {
         var partes = nombreCompleto.Split(", ");
         return (partes[0], partes[1]);
     } else  if(nombreCompleto.Contains(" ")) {
-        var partes = nombreCompleto.Split(" ");
+        var partes   = nombreCompleto.Split(" ");
         var apellido = partes[^1];
-        var nombre = string.Join(" ", partes[0..^1]);
+        var nombre   = string.Join(" ", partes[0..^1]);
         return (apellido, nombre);
     } else {
         return (nombreCompleto, "");
     }
 }
 
-// Perez, Juan Carlos -> ["Pérez", "Juan Carlos"]
-// Juan Carlos Pérez -> ["Pérez", "Juan Carlos"]
-// Pérez -> ["Pérez", ""]
 
 var resultado = SepararNombreApellido("Pérez, Juan Carlos");
-
 var (apellido, nombre) = SepararNombreApellido("Pérez, Juan Carlos");
 Console.WriteLine($"Apellido: {apellido}, Nombre: {nombre}");
 
 (int x, int y) = (10, 20);
 int[] par = [10, 20];
+
 var coordenada = (x: 10, y: 20);
 var color = (r: 255, g: 0, b: 0);
 var pixel = (color r, (int x, int y) coordenada);
@@ -91,6 +92,7 @@ int Minimo(int[] numeros) {
     }
     return min;
 }
+
 (int maximo, int minimo) MaximoMinimo(int[] numeros) {
     int max = numeros[0];
     int min = numeros[0];
@@ -112,7 +114,7 @@ var resultado = MaximoMinimo(numeros);
 Console.WriteLine($"Máximo: {maximo}, Mínimo: {minimo}");
 Console.WriteLine($"Máximo: {resultado.maximo}, Mínimo: {resultado.minimo}");
 
-static (int minimo, int maximo) mimax(int[] numeros)
+static (int minimo, int maximo) MinMax(int[] numeros)
 {
     if (numeros == null || numeros.Length == 0)
         throw new ArgumentException("El array no puede ser nulo ni vacío.");

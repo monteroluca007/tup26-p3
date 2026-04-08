@@ -10,21 +10,27 @@ Servicio para interactuar con WhatsApp mediante `wacli`.
 ## Funciones públicas
 
 - `Sincronizar()`: actualiza la base local desde `wacli` y recarga los grupos disponibles.
+
 - `Enviar(destinatario, mensaje)`: envía un mensaje a un contacto o grupo resolviendo nombre, teléfono o JID.
     - `destinatario`: nombre, teléfono o JID del contacto o grupo.
     - `mensaje`: contenido del mensaje.
+
 - `Invitar(grupo, usuarios)`: invita uno o más usuarios a un grupo.
-- `Grupos()`: devuelve la lista de grupos disponibles.
     - `grupo`: grupo destino.
     - `usuarios`: usuarios a invitar.
+
+- `Grupos()`: devuelve la lista de grupos disponibles.
+
 - `Participantes(grupo)`: obtiene los participantes de un grupo.
     - `grupo`: grupo a consultar.
+
 - `Mensajes(referencia, desde, hasta)`: devuelve los mensajes de una conversación filtrando opcionalmente por rango de fechas.
     - `referencia`: contacto, grupo, teléfono o JID.
     - `desde`: fecha/hora inicial opcional.
     - `hasta`: fecha/hora final opcional.
 
 */
+
 class WAppService {
     readonly string? store;
     readonly TimeSpan timeout;

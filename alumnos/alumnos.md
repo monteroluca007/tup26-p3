@@ -5,9 +5,9 @@
 LegajX  Nombre y Apellido                Teléfono         Foto  GitHub                   Prácticos          Exámenes        
 ------  -------------------------------  ---------------  ----  -----------------------  -----------------  -----------------
 63456   Avila Lahr, Joaquin              (381) 527-6836   Si    Joacoavila9              🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
-63415   Chavez, Lucas Francisco          (381) 301-3490   Si    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+63415   Chavez, Lucas Francisco          (381) 301-3490   Si    lucaschavez10lc-ai       🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63268   Condori, Karina Edith            (381) 412-4723   Si    kariiedith9315           🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
-63402   Condori, Nahuel Ariel            (381) 341-9689   No    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+63402   Condori, Nahuel Ariel            (381) 341-9689   No    NahuelC19                🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63419   Coronel, Tomás                   (381) 678-0335   Si    tomicor979-lgtm          🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63241   Cortez, Josias                   (381) 665-0808   No    josias57455              🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63330   Cuevas, Joel Alejandro           —                No    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
@@ -16,22 +16,22 @@ LegajX  Nombre y Apellido                Teléfono         Foto  GitHub         
 61577   Gonzalez, Lucas Alfredo E        (381) 669-4386   Si    Lucasgonzaa              🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63457   Gonzalez Dupuy, Ignacio          (381) 683-1233   Si    ignas11                  🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63174   Jerez, Luciano German            (381) 550-7143   Si    luchex1525               🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
-63700   Jimenez, Nelson Maximilian       -                No    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+63700   Jimenez, Nelson Maximilian       (381) 639‑2861   No    maximilianojimnez        🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63399   Lazarte, Gonzalo Romeo           (381) 576-0069   No    Tutu-04                  🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63211   Montero, Luca                    (381) 528-7848   No    monteroluca007           🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
-63350   Paez Carabajal, Santiago         (381) 572-4096   Si    SantiagoPaez-2           🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
-61581   Paz, Naim Federico               (381) 353-0060   Si    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
-63647   Paz, Valentina                   (381) 599-6422   Si    valepaz11                🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+63350   Paez Carabajal, Santiago         (381) 572-4096   Si    SantiagoPaez-2           🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+61581   Paz, Naim Federico               (381) 353-0060   Si    naimp074                 🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+63647   Paz, Valentina                   (381) 599-6422   Si    valepaz11                🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63420   Pereyra, Valentina Nazaret       (381) 552-8065   Si    ValentinaPereyra03       🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63354   Perondi, Luciano                 (381) 350-0777   Si    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
-63393   Ritorto, Lucca                   (381) 627-2271   No    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+63393   Ritorto, Lucca                   (381) 627-2271   No    LuccaRDP                 🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63208   Rosconi, Ignacio Federico        (381) 533-1344   Si    IgnacioRosconi           🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63387   Sosa Gonella, Luca               (381) 355-5126   Si    lucasosag1               🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63546   Sosa Paz, Jeremías               (381) 200-7473   No    jeerepazz                🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
-63547   Sosa Paz, Jose Lisandro          (381) 675-3624   No    lisandropaz              🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+63547   Sosa Paz, José Lisandro          (381) 675-3624   No    lisandropaz              🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63447   Suarez, Sofia Celeste            (381) 246-3725   Si    suarezsofia541-alt       🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 61490   Valdez Bustamante, Tomás         (381) 303-1034   No    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
-63397   Vercellone, Tomas                (381) 676 6267   No    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+63397   Vercellone, Tomás                (381) 676 6267   No    Xtomi2456                🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63696   Yael, Ramon Ezequiel             (381) 326-4777   Si    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 ```
 
@@ -49,7 +49,7 @@ LegajX  Nombre y Apellido                Teléfono         Foto  GitHub         
 63341   Carrer, Juan Cruz                (381) 632-5727   Si    juancarrer11             🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63461   Cativa, Facundo Simón            (381) 391-4222   Si    cativafacundo9-gif       🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63218   Cortes, Guillermo Augusto        (381) 606-0586   Si    GuilleCortes01           🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
-64016   Cura, Rocio Aylen                (381) 478-8799   No    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+64016   Cura, Rocio Aylen                (381) 478-8799   No    rocura26                 🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63266   Decima, Juan Cruz                (381) 558-9063   Si    devjuancruz003-com       🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63137   Díaz, José Simón                 (381) 617-9958   Si    JoseSimonDiaz            🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 61641   Figueroa, Nahuel Ramon Al        (381) 353-2589   No    figueroanahuel16         🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
