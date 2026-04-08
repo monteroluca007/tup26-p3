@@ -31,24 +31,60 @@ class Program
         }
     }
 
-    static AppConfig ParseArgs(string[] args)
+ static AppConfig ParseArgs(string[] args)
 {
     string? input = null;
     string? output = null;
+    string delimiter = ",";
+    bool noHeader = false;
+    var sortFields = new List<SortField>();
 
-    if (args.Length > 0)
-        input = args[0];
+    for (int i = 0; i < args.Length; i++)
+    {
+        var arg = args[i];
 
-    if (args.Length > 1)
-        output = args[1];
+        if (arg == "-i" || arg == "--input")
+        {
+            if (i + 1 < args.Length) input = args[++i];
+        }
+        else if (arg == "-o" || arg == "--output")
+        {
+            if (i + 1 < args.Length) output = args[++i];
+        }
+        else if (arg == "-d" || arg == "--delimiter")
+        {
+            if (i + 1 < args.Length) delimiter = args[++i];
+        }
+        else if (arg == "-nh" || arg == "--no-header")
+        {
+            noHeader = true;
+        }
+        else if (arg == "-b" || arg == "--by")
+        {
+            if (i + 1 < args.Length)
+            {
+                var spec = args[++i];
+                var parts = spec.Split(':');
+                var name = parts[0];
+                bool numeric = parts.Length > 1 && parts[1] == "num";
+                bool descending = parts.Length > 2 && parts[2] == "desc";
+                sortFields.Add(new SortField(name, numeric, descending));
+            }
+        }
+        else if (arg == "-h" || arg == "--help")
+        {
+            Console.WriteLine("Uso: sortx [input [output]] [-b campo[:tipo[:orden]]] [-d delimitador] [-nh] [-h]");
+            Environment.Exit(0);
+        }
+        else
+        {
+            // Argumentos posicionales
+            if (input == null) input = arg;
+            else if (output == null) output = arg;
+        }
+    }
 
-    return new AppConfig(
-        input,
-        output,
-        ",",
-        false,
-        new List<SortField>()
-    );
+    return new AppConfig(input, output, delimiter, noHeader, sortFields);
 }
 
    static string ReadInput(AppConfig config)
@@ -111,27 +147,31 @@ class Program
     if (config.SortFields.Count == 0)
         return rows;
 
-    var field = config.SortFields[0]; // primer campo de la lista
-
     rows.Sort((a, b) =>
     {
-        var valA = a.ContainsKey(field.Name) ? a[field.Name] : "";
-        var valB = b.ContainsKey(field.Name) ? b[field.Name] : "";
-
-        int result;
-
-        if (field.Numeric)
+        foreach (var field in config.SortFields)
         {
-            double numA = double.TryParse(valA, out var na) ? na : 0;
-            double numB = double.TryParse(valB, out var nb) ? nb : 0;
-            result = numA.CompareTo(numB);
-        }
-        else
-        {
-            result = string.Compare(valA, valB, StringComparison.OrdinalIgnoreCase);
+            var valA = a.ContainsKey(field.Name) ? a[field.Name] : "";
+            var valB = b.ContainsKey(field.Name) ? b[field.Name] : "";
+
+            int result;
+            if (field.Numeric)
+            {
+                double numA = double.TryParse(valA, out var na) ? na : 0;
+                double numB = double.TryParse(valB, out var nb) ? nb : 0;
+                result = numA.CompareTo(numB);
+            }
+            else
+            {
+                result = string.Compare(valA, valB, StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (field.Descending) result = -result;
+
+            if (result != 0) return result; // si hay diferencia, devuelve
         }
 
-        return field.Descending ? -result : result;
+        return 0; // todos iguales
     });
 
     return rows;
