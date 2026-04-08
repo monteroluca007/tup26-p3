@@ -25,4 +25,10 @@ catch (Exception ex)
     Console.Error.WriteLine($"Error: {ex.Message}");
     Environment.Exit(1);
 }
+ 
+ string Serialize(List<Dictionary<string,string>> rows, List<string> header, AppConfig config)
+{
+    var sb = new StringBuilder();
+
+}
 
