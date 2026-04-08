@@ -1,7 +1,154 @@
 using System;
-
 using static System.Console;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Data.Common;
+
+try
+{
+    /*parseargs  => reandinput => parsedelimited => sortrows => serialize => writeoutput
+      Obtener de consola => leer config => separar => ordenar => escribir => entregar 
+    */
+
+    AppConfig configuracion = ParseArgs(args); //args ==> lo q pasa por consola 
+    string texto = ReadInput(configuracion);
+    List<Dictionary<string, string>> filas = ParseDelimited(texto, configuracion.Delimitador, configuracion.noheader);
+}
+catch (Exception e)
+{
+    Error.WriteLine("Error encontrado:" + e.Message);
+    Environment.Exit(1); // aviso que el programa fallo 
+}
+
+static AppConfig ParseArgs(string[] argumentos)
+{
+    //configuracion
+    string? entrada = null;
+    string? Salida = null;
+    string Delimitador = "," ?? "\t" ?? "|";
+    bool noheader = false;
+    List<SortField> sortfields = [];
+
+    for (int i = 0; i < argumentos.Length; i++) /*recorre los argumentos, valida y guarda lo que viene despues */
+    {
+        if (argumentos[i] == "-i" || argumentos[i] == "--input")
+        {
+            entrada = argumentos[++i];
+        }
+        else if (argumentos[i] == "-o" || argumentos[i] == "--output") Salida = argumentos[++i];
+        else if (argumentos[i] == "-d" || argumentos[i] == "--delimiter") Delimitador = argumentos[++i];
+        else if (argumentos[i] == "-nh" || argumentos[i] == "--no-header") noheader = true;
+        else if (argumentos[i] == "-b" || argumentos[i] == "--by")
+        {
+            string[] config = argumentos[++i].Split(':');
+            //Ordenamiento
+            bool num = false;
+            bool desc = false;
+            bool asc = true;//default 
+            bool alpha = true;//default
+            string campo = config[0];
+
+            for (int j = 1; j < config.Length; j++)
+            {
+                //cambia tipo
+                if (config[j] == "num") { num = true; alpha = false; }
+
+                //orden
+                if (config[j] == "desc") { desc = true; asc = false; }
+
+            }
+            sortfields.Add(new SortField(campo, alpha, num, desc, asc));
+
+        }
+        else if (argumentos[i] == "-h")
+        {
+            WriteLine("help (ayuda)");
+            WriteLine("sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...\n      [-i|--input input] [-o|--output output]\n      [-d|--delimiter delimitador]\n      [-nh|--no-header] [-h|--help]");
+
+            Environment.Exit(0);
+        }
+        else if (!argumentos[i].StartsWith("-")) // no comienza con - 
+        {
+            if (entrada == null) entrada = argumentos[i];
+            else if (Salida == null) Salida = argumentos[i];
+        }
+    }
+    return new AppConfig(entrada, Salida, Delimitador, noheader, sortfields);
+
+}
+; //Retornara el record AppConfig la funcion es ParseArgs 
+
+static string ReadInput(AppConfig configuracion) // Me lee las entradas detexto, valida y escupe un string que se guarda en texto
+{
+    if (configuracion.Entrada != null)
+    {
+        return File.ReadAllText(configuracion.Entrada);
+    }
+    else
+    {
+        return In.ReadToEnd();
+    }
+}
+
+static List<Dictionary<string, string>> ParseDelimited(string texto, string? delimitador, bool noheader)
+{
+    string[] linea = texto.Split('\n'); // Divido por fila
+    Dictionary<string, string> fila = []; 
+    List<Dictionary<string, string>> filas = []; // Lista final 
+
+    if (noheader == false)
+    {
+        string[] encabezado = linea[0].Split(delimitador); // nombres columna 
+        
+        for (int i = 1; i < linea.Length; i++) //recorre las filas
+        {
+            string[] valores = linea[i].Trim().Split(delimitador);  
+            for (int j = 0; j < valores.Length; j++)
+            {
+                fila.Add(encabezado[j], valores[j]);
+            }
+            filas.Add(fila);
+            fila = [];
+        }
+    }
+    else
+    {
+        // uno,dos,tres,cuatro,cinco
+    }
+
+    return filas;
+/*  
+encabezado=[id,nombre,apellido,edad,salario,departamento]
+valores[0]=[1,Carlos,García,35,85000,Ingeniería]
+valores[1]=[2,Ana ]
+  id,nombre,apellido,edad,salario,departamento
+  1,Carlos,García,35,85000,Ingeniería
+  2,Ana,Martínez,28,72000,Diseño
+  3,Luis,Rodríguez,42,120000,Gerencia
+  4,María,López,31,88000,Ingeniería
+  5,Pedro,Sánchez,25,65000,Diseño
+  6,Laura,González,38,95000,Gerencia
+
+    */
+}
+
+record SortField(string campo, bool alpha, bool num, bool desc, bool asc); // campo por el que ordena. 
+record AppConfig(string? Entrada, string? Salida, string Delimitador, bool noheader, List<SortField> sortfields);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*
 sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
       [-i|--input input] [-o|--output output]
@@ -42,100 +189,3 @@ Si el archivo de entrada no se especifica, la herramienta debe leer desde stdin.
 Si el archivo de salida no se especifica, la herramienta debe escribir en stdout.
 
 */
-
-try
-{
-    /*parseargs  => reandinput => parsedelimited => sortrows => serialize => writeoutput
-      Obtener de consola => leer config => separar => ordenar => escribir => entregar 
-    */
-
-    AppConfig configuracion = ParseArgs(args); //args ==> lo q pasa por consola 
-    string texto = ReadInput(configuracion);
-    List<Dictionary<string, string>> filas = ParseDelimited(texto);
-}
-catch (Exception e)
-{
-    Error.WriteLine("Error encontrado:" + e.Message);
-    Environment.Exit(1); // aviso que el programa fallo 
-}
-
-static AppConfig ParseArgs(string[] argumentos)
-{
-    //configuracion
-    string? entrada = null;
-    string? Salida = null;
-    string Delimitador = "," ?? "\t" ?? "|";
-    bool noheader = false;
-    List<SortField> sortfields = [];
-
-
-
-    for (int i = 0; i < argumentos.Length; i++) /*recorre los argumentos, valida y guarda lo que viene despues */
-    {
-        if (argumentos[i] == "-i" || argumentos[i] == "--input")
-        {
-            entrada = argumentos[++i];
-        }
-        else if (argumentos[i] == "-o" || argumentos[i] == "--output") Salida = argumentos[++i];
-        else if (argumentos[i] == "-d" || argumentos[i] == "--delimiter") Delimitador = argumentos[++i];
-        else if (argumentos[i] == "-nh" || argumentos[i] == "--no-header") noheader = true;
-        else if (argumentos[i] == "-b" || argumentos[i] == "--by")
-        {
-            string[] config = argumentos[++i].Split(':');
-            //Ordenamiento
-            bool num = false;
-            bool desc = false;
-            bool asc = true;//default 
-            bool alpha = true;//default
-            string campo = config[0];
-
-            for (int j = 1; j < config.Length; j++)
-            {
-                //cambia tipo
-                if (config[j] == "num") { num = true; alpha = false; }
-                
-                //orden
-                if (config[j] == "desc") {desc = true;asc = false; }
-
-            }
-            sortfields.Add(new SortField(campo, alpha, num, desc, asc));
-
-        }
-        else if (argumentos[i] == "-h")
-        {
-            WriteLine("help (ayuda)");
-            WriteLine("sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...\n      [-i|--input input] [-o|--output output]\n      [-d|--delimiter delimitador]\n      [-nh|--no-header] [-h|--help]");
-
-            Environment.Exit(0);
-        }
-        else if (!argumentos[i].StartsWith("-")) // no comienza con - 
-        {
-            if (entrada == null) entrada = argumentos[i];
-            else if (Salida == null) Salida = argumentos[i];
-        }
-    }
-    return new AppConfig(entrada, Salida, Delimitador, noheader, sortfields);
-
-}
-; //Retornara el record AppConfig la funcion es ParseArgs 
-
-static string ReadInput(AppConfig configuracion) // Me lee las entradas detexto, valida y escupe un string que se guarda en texto
-{
-    if (configuracion.Entrada != null)
-    {
-        return File.ReadAllText(configuracion.Entrada);
-    }
-    else
-    {
-        return In.ReadToEnd();
-    }
-}
-
-record SortField(string campo, bool alpha, bool num, bool desc, bool asc); // campo por el que ordena. 
-record AppConfig(string? Entrada, string? Salida, string Delimitador, bool noheader, List<SortField> sortfields);
-
-
-
-
-
-
