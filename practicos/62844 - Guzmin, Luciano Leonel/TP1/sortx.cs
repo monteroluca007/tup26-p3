@@ -1,6 +1,18 @@
-using System;
-using System.IO;
-using System.Collections.Generic;
+
+try
+{
+    var config = ParsearArgumentos(args);
+    var texto = LeerEntrada(config);
+    var datos = ParsearDelimitado(texto, config);
+    var ordenado = OrdenarFilas(datos, config);
+    var salida = Serializar(ordenado, config);
+    EscribirSalida(salida, config);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error: {ex.Message}");
+    Environment.Exit(1);
+}
 
 AppConfig ParsearArgumentos(string[] args)
 {
