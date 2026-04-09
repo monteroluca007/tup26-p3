@@ -178,6 +178,17 @@ string Serializar(List<Dictionary<string, string>> filas, Configuracion config)
     }
     return sb.ToString().TrimEnd();
 }
+void EscribirSalida(string contenido, Configuracion config)
+{
+    if (config.ArchivoSalida != null)
+    {
+        File.WriteAllText(config.ArchivoSalida, contenido);
+    }
+    else
+    {
+        Console.Write(contenido);
+    }
+}
 
 
 
