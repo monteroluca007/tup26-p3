@@ -173,3 +173,17 @@ List<Dictionary<string, string>> OrdenarFilas(List<Dictionary<string, string>> f
     return filasOrdenadas?.ToList() ?? filas;
 }
 
+string Serializar(List<Dictionary<string, string>> filas, ConfiguracionApp config)
+{
+    var lineas = new List<string>();
+    var encabezados = filas[0].Keys.ToArray();
+    if (!config.SinEncabezado)
+    {
+        lineas.Add(string.Join(config.Delimitador, encabezados));
+    }
+    foreach (var fila in filas)
+    {
+        lineas.Add(string.Join(config.Delimitador, encabezados.Select(e => fila[e])));
+    }
+    return string.Join("\n", lineas);
+}
