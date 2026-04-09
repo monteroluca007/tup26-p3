@@ -37,7 +37,7 @@ class Program {
         // AlumnosManager.CopiarEnunciadoPracticos(alumnos, "tp1");
 
         GitHub gh = new GitHub();
-        if (GitHub.ListarPRSinLegajo(gh) == 0) { GitHub.NormalizarTitulosPR(gh, alumnos, simular: false); } 
+        if (gh.PRSinLegajo() == 0) { gh.NormalizarTitulosPR(alumnos, simular: false); } 
         foreach(var pr in gh.ListarPR()) {
             var commits   = gh.ListarCommits(pr.Numero);
             var detallePr = gh.ObtenerEstado(pr.Numero);
