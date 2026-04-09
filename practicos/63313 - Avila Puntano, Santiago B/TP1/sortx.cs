@@ -106,7 +106,7 @@ string readinput(AppConfig cfg)
     return Console.In.ReadToEnd(); 
 }
 // lista de fila y encabezado en base al texto de archivo cfg
-(List<Dictionary<string,string>> rows, string[]? header) parsedelimited(string text, AppConfig cfg)
+(List<Dictionary<string,string>> rows, string[]? headers) ParseDelimited(string text, AppConfig cfg)
 {
     // el templines va a tener todas las lineas incluyendo las vacias tambien, despues con el split separa en lineas y por ultimo se eliminan las lineas vacias.
     var tempLines = text
@@ -118,17 +118,17 @@ string readinput(AppConfig cfg)
     if (lines.Length == 0)
         return (new List<Dictionary<string, string>>(), null);
 
-    string[] header;
+    string[]? headers;
     int dataStart;
 
     if (!cfg.NoHeader)
     {
-        header = lines[0].Split(cfg.Delimiter);
+        headers = lines[0].Split(cfg.Delimiter);
         dataStart = 1;
     }
     else
     {
-        header = null;
+        headers = null;
         dataStart = 0;
     }
     
@@ -138,11 +138,11 @@ string readinput(AppConfig cfg)
         var values = lines[lineIdx].Split(cfg.Delimiter); // se guardan los datos spliteados en values
         var row = new Dictionary<string, string>(); // se crea una carpeta vacia para guardar los datos de cada fila.
 
-        if (!cfg.NoHeader && header is not null)
+        if (!cfg.NoHeader && headers is not null)
         {
-            for (int col = 0; col < header.Length; col++) // bucle q recorre las columnas de las columnas 0 al 3
+            for (int col = 0; col < headers.Length; col++) // bucle q recorre las columnas de las columnas 0 al 3
             {
-                row[header[col]] = col < values.Length ? values[col] : string.Empty; // se guarda en  la var row el valor de cada columna
+                row[headers[col]] = col < values.Length ? values[col] : string.Empty; // se guarda en  la var row el valor de cada columna
             }
         }
         else
@@ -222,7 +222,7 @@ string readinput(AppConfig cfg)
     if (cfg.SortFields.Count > 0 && rows.Count > 0)
         rows = sortrows(rows, cfg.SortFields);
 
-    return (rows, header);
+    return (rows, headers);
 }
 
 string serialize(List<Dictionary<string, string>> rows, string[]? header, AppConfig cfg)
@@ -325,7 +325,7 @@ string serialize(List<Dictionary<string, string>> rows, string[]? header, AppCon
     }
 
     var rawText = readinput(config);
-    var (rows, headers) = parsedelimited(rawText, config);
+    var (rows, headers) = ParseDelimited(rawText, config);
     var output = serialize(rows, headers, config);
     writeoutput(output, config);
 }
