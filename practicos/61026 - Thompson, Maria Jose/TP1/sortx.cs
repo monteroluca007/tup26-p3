@@ -66,22 +66,59 @@ Configuracion LeerArgumentos(string[] argumentos)
     }
     return new Configuracion(entrada, salida, delim, noHeader, criterios);
 }
+string LeerEntrada(Configuracion config)
+{
+    if (config.ArchivoEntrada != null)
+    {
+        return File.ReadAllText(config.ArchivoEntrada);
+    }
 
+    return Console.In.ReadToEnd();
+}
+List<Dictionary<string, string>> ProcesarTexto(string texto, Configuracion config)
+{
+    var lineas = texto.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+    var listaResultante = new List<Dictionary<string, string>>();
 
+    if (lineas.Length == 0) return listaResultante;
 
+    string[] encabezados;
+    int indiceInicio = 0;
 
+    if (config.SinEncabezado)
+    {
+        string[] columnasFilaUno = lineas[0].Split(config.Delimitador);
+        encabezados = new string[columnasFilaUno.Length];
+        for (int i = 0; i < columnasFilaUno.Length; i++) encabezados[i] = i.ToString();
+    }
+    else
+    {
+        encabezados = lineas[0].Split(config.Delimitador);
+        indiceInicio = 1;
+    }
+    for (int i = indiceInicio; i < lineas.Length; i++)
+    {
+        string[] celdas = lineas[i].Split(config.Delimitador);
+        var filaDiccionario = new Dictionary<string, string>();
 
+        for (int j = 0; j < encabezados.Length; j++)
+        {
+            filaDiccionario[encabezados[j]] = j < celdas.Length ? celdas[j] : "";
+        }
+        listaResultante.Add(filaDiccionario);
+    }
+    if (!config.SinEncabezado)
+    {
+        var filaHeader = new Dictionary<string, string>();
+        foreach (var nombreColumna in encabezados)
+        {
+            filaHeader[nombreColumna] = nombreColumna;
+        }
+        listaResultante.Insert(0, filaHeader);
+    }
 
-
-
-
-
-
-
-
-
-
-
+    return listaResultante;
+}
 
 
 
