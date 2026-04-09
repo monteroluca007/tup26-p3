@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 //Flujo Principal del Programa
 try
@@ -10,13 +12,19 @@ try
     Console.WriteLine($" > Salida:  {config.OutputFile ?? "(pantalla/stdout)"}");
     Console.WriteLine($" > Separador: '{config.Delimiter}'");
     Console.WriteLine($" > Reglas de orden: {config.SortFields.Count}");
+    
     string textoCrudo = ReadInput(config);
     Console.WriteLine("Lectura exitosa.");
     Console.WriteLine($" > Caracteres leídos: {textoCrudo.Length}");
+    
     var (headers, filas) = ParseDelimited(textoCrudo, config);
     Console.WriteLine(" Procesamiento exitoso.");
     Console.WriteLine($" > Columnas detectadas: {headers.Length} ({string.Join(", ", headers)})");
     Console.WriteLine($" > Filas de datos: {filas.Count}");
+
+    var filasOrdenadas = SortRows(filas, config);
+    Console.WriteLine("Ordenamiento completado.");
+    Console.WriteLine($" > Registros ordenados: {filasOrdenadas.Count}");
 }
 catch (Exception ex)
 {
@@ -103,6 +111,7 @@ AppConfig ParseArgs(string[] argumentos)
         Console.WriteLine("  -h, --help");
     }
 }
+
 string ReadInput(AppConfig config)
 {
     // Se pasó una ruta de archivo
@@ -124,6 +133,7 @@ string ReadInput(AppConfig config)
     // No paso nada para leer
     throw new InvalidOperationException("No se pasó ningún archivo ni datos para leer.");
 }
+
 (string[] Headers, List<Dictionary<string, string>> Rows) ParseDelimited(string texto, AppConfig config)
 {
     // Separo el texto por cada salto de línea
@@ -155,6 +165,41 @@ string ReadInput(AppConfig config)
         listaFilas.Add(fila);
     }
     return (encabezados, listaFilas);
+}
+
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> filas, AppConfig config)
+{
+    if (config.SortFields.Count == 0) return filas;
+
+    IOrderedEnumerable<Dictionary<string, string>> filasOrdenadas;
+
+    var primera = config.SortFields[0];
+    if (primera.Descending)
+        filasOrdenadas = filas.OrderByDescending(f => GetValue(f, primera));
+    else
+        filasOrdenadas = filas.OrderBy(f => GetValue(f, primera));
+
+    for (int i = 1; i < config.SortFields.Count; i++)
+    {
+        var regla = config.SortFields[i];
+        if (regla.Descending)
+            filasOrdenadas = filasOrdenadas.ThenByDescending(f => GetValue(f, regla));
+        else
+            filasOrdenadas = filasOrdenadas.ThenBy(f => GetValue(f, regla));
+    }
+
+    return filasOrdenadas.ToList();
+}
+
+//Función auxiliar para obtener un valor (Texto o Número)
+object GetValue(Dictionary<string, string> fila, SortField regla)
+{
+    string valor = fila.ContainsKey(regla.Name) ? fila[regla.Name] : "";
+
+    if (regla.Numeric && double.TryParse(valor, out double num))
+        return num;
+
+    return valor;
 }
 
 //Modelo de Datos
