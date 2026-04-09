@@ -60,6 +60,14 @@ AppConfig ParsearArgumentos(string[] args)
     return new AppConfig(archivoEntrada, archivoSalida, delimitador, sinEncabezado, camposOrden);
 }
 
+string LeerEntrada(AppConfig config)
+{
+    if (config.InputFile != null)
+        return File.ReadAllText(config.InputFile);
+
+    return Console.In.ReadToEnd();
+}
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
