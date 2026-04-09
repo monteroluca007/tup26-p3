@@ -136,6 +136,34 @@ string[] Separar(string linea, string delimitador)
     return linea.Split(new string[] { delimitador }, StringSplitOptions.None);
 }
 
+(List<Dictionary<string, string>> Filas, List<string> Encabezados) OrdenarFilas(
+    (List<Dictionary<string, string>> Filas, List<string> Encabezados) datos,
+    AppConfig config)
+{
+    var filas = datos.Filas;
+
+    foreach (var campo in config.SortFields)
+    {
+        if (!datos.Encabezados.Contains(campo.Name))
+            throw new Exception($"El campo '{campo.Name}' no existe");
+    }
+
+    for (int i = 0; i < filas.Count - 1; i++)
+    {
+        for (int j = 0; j < filas.Count - i - 1; j++)
+        {
+            if (Comparar(filas[j], filas[j + 1], config.SortFields) > 0)
+            {
+                var temp = filas[j];
+                filas[j] = filas[j + 1];
+                filas[j + 1] = temp;
+            }
+        }
+    }
+
+    return datos;
+}
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
