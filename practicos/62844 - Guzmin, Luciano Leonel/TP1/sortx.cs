@@ -164,6 +164,35 @@ string[] Separar(string linea, string delimitador)
     return datos;
 }
 
+int Comparar(Dictionary<string, string> a, Dictionary<string, string> b, List<SortField> campos)
+{
+    foreach (var campo in campos)
+    {
+        string valA = a[campo.Name];
+        string valB = b[campo.Name];
+
+        int resultado;
+
+        if (campo.Numeric)
+        {
+            double numA = double.TryParse(valA, out var na) ? na : 0;
+            double numB = double.TryParse(valB, out var nb) ? nb : 0;
+            resultado = numA.CompareTo(numB);
+        }
+        else
+        {
+            resultado = string.Compare(valA, valB, StringComparison.Ordinal);
+        }
+
+        if (resultado != 0)
+        {
+            return campo.Descending ? -resultado : resultado;
+        }
+    }
+
+    return 0;
+}
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
