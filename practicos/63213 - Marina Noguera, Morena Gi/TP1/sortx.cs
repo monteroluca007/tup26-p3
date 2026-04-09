@@ -13,6 +13,10 @@ try
     string textoCrudo = ReadInput(config);
     Console.WriteLine("Lectura exitosa.");
     Console.WriteLine($" > Caracteres leídos: {textoCrudo.Length}");
+    var (headers, filas) = ParseDelimited(textoCrudo, config);
+    Console.WriteLine(" Procesamiento exitoso.");
+    Console.WriteLine($" > Columnas detectadas: {headers.Length} ({string.Join(", ", headers)})");
+    Console.WriteLine($" > Filas de datos: {filas.Count}");
 }
 catch (Exception ex)
 {
@@ -119,6 +123,38 @@ string ReadInput(AppConfig config)
     
     // No paso nada para leer
     throw new InvalidOperationException("No se pasó ningún archivo ni datos para leer.");
+}
+(string[] Headers, List<Dictionary<string, string>> Rows) ParseDelimited(string texto, AppConfig config)
+{
+    // Separo el texto por cada salto de línea
+    var lineas = texto.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+    if (lineas.Length == 0) throw new Exception("El archivo está vacío.");
+
+    string[] encabezados;
+    int inicioDatos = 0;
+
+    // ¿Tiene cabecera? Si no, invento nombres (0, 1, 2...)
+    if (config.NoHeader) {
+        var primera = lineas[0].Split(config.Delimiter);
+        encabezados = primera.Select((_, i) => i.ToString()).ToArray();
+        inicioDatos = 0;
+    } else {
+        encabezados = lineas[0].Split(config.Delimiter);
+        inicioDatos = 1;
+    }
+
+    var listaFilas = new List<Dictionary<string, string>>();
+
+    // Recorro cada línea y la convierto en un "Mapa" (Diccionario)
+    for (int i = inicioDatos; i < lineas.Length; i++) {
+        var celdas = lineas[i].Split(config.Delimiter);
+        var fila = new Dictionary<string, string>();
+        for (int j = 0; j < encabezados.Length; j++) {
+            fila[encabezados[j]] = j < celdas.Length ? celdas[j] : "";
+        }
+        listaFilas.Add(fila);
+    }
+    return (encabezados, listaFilas);
 }
 
 //Modelo de Datos
