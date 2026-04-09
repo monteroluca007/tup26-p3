@@ -193,6 +193,41 @@ int Comparar(Dictionary<string, string> a, Dictionary<string, string> b, List<So
     return 0;
 }
 
+string Serializar(
+    (List<Dictionary<string, string>> Filas, List<string> Encabezados) datos,
+    AppConfig config)
+{
+    var lineas = new List<string>();
+
+    if (!config.NoHeader)
+    {
+        lineas.Add(string.Join(config.Delimiter, datos.Encabezados));
+    }
+
+    foreach (var fila in datos.Filas)
+    {
+        var valores = new List<string>();
+
+        foreach (var h in datos.Encabezados)
+        {
+            valores.Add(fila[h]);
+        }
+
+        lineas.Add(string.Join(config.Delimiter, valores));
+    }
+
+    return string.Join(Environment.NewLine, lineas);
+}
+
+void EscribirSalida(string texto, AppConfig config)
+{
+    if (config.OutputFile != null)
+        File.WriteAllText(config.OutputFile, texto);
+    else
+        Console.WriteLine(texto);
+}
+
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
