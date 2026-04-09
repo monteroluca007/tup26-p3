@@ -83,7 +83,7 @@ try
             throw new ArgumentException($"Opción desconocida: '{arg}'.");
         }
 
-        return new AppConfig(inputFile, outputFile, delimiter, noHeader, showHelp, sortFields);
+        return new AppConfig(inputFile, outputFile, delimiter, noHeader, ShowHelp, sortFields);
     }
 
 
