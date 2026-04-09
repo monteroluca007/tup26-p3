@@ -70,7 +70,44 @@ string ReadInput(AppConfig config)
 
     return Console.In.ReadToEnd();
 }
-List<Dictionary<string,string>> ParseDelimited(string text, AppConfig config) => throw new NotImplementedException();
+
+List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
+{
+    var rows = new List<Dictionary<string, string>>();
+    var lines = text.Split('\n');
+
+    string[] headers;
+
+    if (!config.NoHeader)
+    {
+        headers = lines[0].Trim().Split(config.Delimiter);
+    }
+    else
+    {
+        var first = lines[0].Split(config.Delimiter);
+        headers = new string[first.Length];
+
+        for (int i = 0; i < first.Length; i++)
+            headers[i] = i.ToString();
+    }
+
+    int start = config.NoHeader ? 0 : 1;
+
+    for (int i = start; i < lines.Length; i++)
+    {
+        if (string.IsNullOrWhiteSpace(lines[i])) continue;
+
+        var values = lines[i].Trim().Split(config.Delimiter);
+        var dict = new Dictionary<string, string>();
+
+        for (int j = 0; j < headers.Length; j++)
+            dict[headers[j]] = values[j];
+
+        rows.Add(dict);
+    }
+
+    return rows;
+}
 List<Dictionary<string,string>> SortRows(List<Dictionary<string,string>> rows, AppConfig config) => throw new NotImplementedException();
 string Serialize(List<Dictionary<string,string>> rows, AppConfig config) => throw new NotImplementedException();
 void WriteOutput(string output, AppConfig config) => throw new NotImplementedException();
