@@ -1,57 +1,6 @@
 namespace Tup26.AlumnosApp;
 
 class Program {
-    static int ExtraerLegajo(string titulo) {
-        var match = System.Text.RegularExpressions.Regex.Match(titulo, @"\b\d{5}\b");
-        return match.Success ? int.Parse(match.Value) : 0;
-    }
-
-    static int ListarPrSinLegajo(GitHub gh) {
-        var prs = gh.ListarPRs();
-        int count = 0;
-        foreach(var pr in prs) {
-            if (ExtraerLegajo(pr.Titulo) == 0) {
-                count++;
-                if(count == 1) {
-                    Console.WriteLine("= PR Sin legajo válido =");
-                }
-                Console.WriteLine($"- #{pr.Numero}: {pr.Titulo}");
-            }
-        }
-        if (count == 0) {
-            Console.WriteLine("Todos los PRs tienen un legajo válido en el título.");
-        } else {
-            Console.WriteLine($"Total de PRs sin legajo válido: {count}");
-        }
-        return count;
-    }
-
-    static int NormalizarTitulosPR(GitHub gh, Alumnos alumnos, bool simular = false) {
-        var prs = gh.ListarPRs();
-        int count = 0;
-        foreach(var pr in prs) {
-            var legajo = ExtraerLegajo(pr.Titulo);
-            var alumno = alumnos.BuscarPorLegajo(legajo);
-            if (alumno != null) {
-                string nuevoTitulo = $"{legajo} - TP1 - {alumno.NombreCompleto}";
-                if (nuevoTitulo != pr.Titulo) {
-                    count++;
-                    if(count == 1) {
-                        Console.WriteLine("= PRs a actualizar =");
-                    }
-                    Console.WriteLine($"Actualizando PR #{pr.Numero}:\n > {pr.Titulo}\n < {nuevoTitulo}");
-                    if (!simular) { gh.CambiarTituloPR(pr.Numero, nuevoTitulo); }
-                }
-            }
-        }
-        if (count == 0) {
-            Console.WriteLine("No se encontraron PRs para actualizar.");
-        } else {
-            Console.WriteLine($"Total de PRs a actualizar: {count}");
-        }
-        return count;
-    }
-
     static void Main(string[] args) {
         Alumnos alumnos = AlumnosManager.Cargar(AppPaths.ArchivoAlumnos);
         
@@ -88,23 +37,16 @@ class Program {
         // AlumnosManager.CopiarEnunciadoPracticos(alumnos, "tp1");
 
         GitHub gh = new GitHub();
-        if (ListarPrSinLegajo(gh) == 0) {
-            NormalizarTitulosPR(gh, alumnos, simular: false);
-        } 
-        var prs = gh.ListarPRs();
-        
-        foreach(var pr in prs.OrderBy(pr => pr.Numero)) {
-            var commits = gh.ListarCommitsPR(pr.Numero);
-            string estado = pr.EstaAbierto ? "abierto" : "cerrado";
-            string mergeable = pr.EsMergeable switch {
-                true => "mergeable",
-                false => "con conflictos",
-                null => "sin dato"
-            };
+        if (GitHub.ListarPRSinLegajo(gh) == 0) { GitHub.NormalizarTitulosPR(gh, alumnos, simular: false); } 
+        foreach(var pr in gh.ListarPR()) {
+            var commits   = gh.ListarCommits(pr.Numero);
+            var detallePr = gh.ObtenerEstado(pr.Numero);
+            var estado    = detallePr.Estado == "open" ? "abierto" : detallePr.Estado == "closed" ? "cerrado" : "sin dato";
+            var mergeable = detallePr.EsMergeable ? "mergeable" : "con conflictos";
 
             Console.WriteLine($"- #{pr.Numero:D3} | {estado,-7} | {mergeable,-13} | {(commits.Count > 3 ? "🟢" : "🔴")} {commits.Count,2} | {pr.Titulo}");
             foreach(var commit in commits) {
-                // Console.WriteLine($" > {commit.FechaHora:dd-MM HH:mm} - {commit.Titulo} ()");
+                Console.WriteLine($" > {commit.FechaHora:dd-MM HH:mm} - {commit.Titulo} ()");
             }
         }
         // List<string> colaboradores = gh.ListarColaboradores();

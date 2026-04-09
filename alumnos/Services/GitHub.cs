@@ -10,12 +10,11 @@ class GitHub {
     }
 
     public bool AgregarColaborador(string usuario) {
-        (string salida, string error, int codigoSalida) = EjecutarGh(new[]
-        { "api", "--method", "PUT", $"repos/{owner}/{repo}/collaborators/{usuario}", "-f", "permission=push" });
+        (string salida, int codigoSalida) = EjecutarGH(
+            $"Error al agregar colaborador '{usuario}'",
+            new[] { "api", "--method", "PUT", $"repos/{owner}/{repo}/collaborators/{usuario}", "-f", "permission=push" });
 
         if (codigoSalida != 0) {
-            string detalle = string.IsNullOrWhiteSpace(error) ? salida : error;
-            Console.WriteLine($"Error al agregar colaborador '{usuario}': {detalle}");
             return false;
         }
 
@@ -23,12 +22,11 @@ class GitHub {
     }
 
     public List<string> ListarColaboradores() {
-        (string salida, string error, int codigoSalida) = EjecutarGh(new[]
-        { "api", $"repos/{owner}/{repo}/collaborators", "--jq", ".[] | select(.permissions.push == true) | .login" });
+        (string salida, int codigoSalida) = EjecutarGH(
+            "Error al listar colaboradores",
+            new[] { "api", $"repos/{owner}/{repo}/collaborators", "--jq", ".[] | select(.permissions.push == true) | .login" });
 
         if (codigoSalida != 0) {
-            string detalle = string.IsNullOrWhiteSpace(error) ? salida : error;
-            Console.WriteLine($"Error al listar colaboradores: {detalle}");
             return new();
         }
 
@@ -36,50 +34,188 @@ class GitHub {
     }
 
     public List<string> ListarInvitacionesPendientes() {
-        (string salida, string error, int codigoSalida) = EjecutarGh(new[]
-        { "api", $"repos/{owner}/{repo}/invitations", "--paginate", "--jq", ".[].invitee.login" });
+        (string salida, int codigoSalida) = EjecutarGH(
+            "Error al listar invitaciones pendientes",
+            new[] { "api", $"repos/{owner}/{repo}/invitations", "--paginate", "--jq", ".[].invitee.login" });
 
         if (codigoSalida != 0) {
-            string detalle = string.IsNullOrWhiteSpace(error) ? salida : error;
-            Console.WriteLine($"Error al listar invitaciones pendientes: {detalle}");
             return new();
         }
 
         return LeerLineas(salida);
     }
 
-    public List<(int Numero, string Titulo, bool? EsMergeable, bool EstaAbierto)> ListarPRs(bool soloAbiertos = true) {
+    public List<(int Numero, string Titulo)> ListarPR(bool soloAbiertos = true) {
         string estado = soloAbiertos ? "open" : "all";
 
-        (string salida, string error, int codigoSalida) = EjecutarGh(new[]
-        { "api", $"repos/{owner}/{repo}/pulls?state={estado}", "--paginate", "--jq", ".[] | \"\\(.number)\\t\\(.title)\\t\\(.state)\"" });
+        (string salida, int codigoSalida) = EjecutarGH(
+            "Error al listar PRs",
+            new[] { "api", $"repos/{owner}/{repo}/pulls?state={estado}", "--paginate", "--jq", @".[] | ""\(.number)\t\(.title)""" });
 
         if (codigoSalida != 0) {
-            string detalle = string.IsNullOrWhiteSpace(error) ? salida : error;
-            Console.WriteLine($"Error al listar PRs: {detalle}");
             return new();
         }
 
-        List<(int Numero, string Titulo, bool? EsMergeable, bool EstaAbierto)> prs = new();
-
+        List<(int Numero, string Titulo)> prs = new();
         foreach (string linea in LeerLineas(salida, pasarAMinusculas: false)) {
-            string[] partes = linea.Split('\t', 3);
+            string[] partes = linea.Split('\t', 2);
 
-            if (partes.Length != 3) {
-                continue;
+            if (partes.Length != 2) { continue; }
+            if (!int.TryParse(partes[0], out int numero)) { continue; }
+
+            prs.Add((numero, partes[1]));
+        }
+        prs.Sort((a, b) => a.Numero.CompareTo(b.Numero));
+        return prs;
+    }
+
+    public static int ExtraerTP(string titulo) {
+        Match match = Regex.Match(titulo, @"\bTP\d+\b", RegexOptions.IgnoreCase);
+        return match.Success ? int.Parse(match.Value[2..]) : 0;
+    }
+
+    public static int ListarPRSinLegajo(GitHub gh) {
+        List<(int Numero, string Titulo)> prs = gh.ListarPR();
+        int count = 0;
+
+        foreach ((int Numero, string Titulo) pr in prs) {
+            if (ExtraerLegajo(pr.Titulo) == 0) {
+                if (count++ == 0) {
+                    Console.WriteLine("= PR Sin legajo válido =");
+                }
+
+                Console.WriteLine($"- #{pr.Numero}: {pr.Titulo}");
             }
-
-            if (!int.TryParse(partes[0], out int numero)) {
-                continue;
-            }
-
-            bool estaAbierto = string.Equals(partes[2], "open", StringComparison.OrdinalIgnoreCase);
-            bool? esMergeable = estaAbierto ? ObtenerMergeablePR(numero) : null;
-
-            prs.Add((numero, partes[1], esMergeable, estaAbierto));
         }
 
-        return prs;
+        if (count == 0) {
+            Console.WriteLine("Todos los PRs tienen un legajo válido en el título.");
+        } else {
+            Console.WriteLine($"Total de PRs sin legajo válido: {count}");
+        }
+
+        return count;
+    }
+
+    public static int ListarPRConConflictos(GitHub gh) {
+        List<(int Numero, string Titulo)> prs = gh.ListarPR();
+        int count = 0;
+
+        foreach ((int Numero, string Titulo) pr in prs) {
+            (string Estado, bool EsMergeable) detallePr = gh.ObtenerEstado(pr.Numero);
+
+            if (detallePr.EsMergeable == false) {
+                if (count++ == 0) {
+                    Console.WriteLine("= PR con conflictos =");
+                }
+
+                Console.WriteLine($"- #{pr.Numero}: {pr.Titulo}");
+            }
+        }
+
+        if (count == 0) {
+            Console.WriteLine("No se encontraron PRs con conflictos.");
+        } else {
+            Console.WriteLine($"Total de PRs con conflictos: {count}");
+        }
+
+        return count;
+    }
+
+    public static int NormalizarTitulosPR(GitHub gh, Alumnos alumnos, bool simular = false) {
+        List<(int Numero, string Titulo)> prs = gh.ListarPR();
+        int count = 0;
+
+        foreach ((int Numero, string Titulo) pr in prs) {
+            int legajo = ExtraerLegajo(pr.Titulo);
+            Alumno? alumno = alumnos.BuscarPorLegajo(legajo);
+
+            if (alumno != null) {
+                string nuevoTitulo = $"{legajo} - TP{ExtraerTP(pr.Titulo)} - {alumno.NombreCompleto}";
+
+                if (nuevoTitulo != pr.Titulo) {
+                    if (count++ == 0) {
+                        Console.WriteLine("= PRs a actualizar =");
+                    }
+
+                    Console.WriteLine($"Actualizando PR #{pr.Numero}:\n > {pr.Titulo}\n < {nuevoTitulo}");
+
+                    if (!simular) {
+                        gh.CambiarTituloPR(pr.Numero, nuevoTitulo);
+                    }
+                }
+            }
+        }
+
+        if (count == 0) {
+            Console.WriteLine("No se encontraron PRs para actualizar.");
+        } else {
+            Console.WriteLine($"Total de PRs a actualizar: {count}");
+        }
+
+        return count;
+    }
+
+    public (string Estado, bool EsMergeable) ObtenerEstado(int numeroPR) {
+        (string salida, int codigoSalida) = EjecutarGH(
+            $"Error al consultar el estado del PR #{numeroPR}",
+            new[] { "api", $"repos/{owner}/{repo}/pulls/{numeroPR}", "--jq", @"""\(.state)\t\(.mergeable)""" });
+
+        if (codigoSalida != 0) {
+            return (string.Empty, false);
+        }
+
+        string[] partes = salida.Trim().Split('\t', 2);
+
+        if (partes.Length != 2) {
+            return (string.Empty, false);
+        }
+
+        return (partes[0].ToLower(), partes[1].ToLower() == "true");
+    }
+
+    public bool MergeAutomatico(int numeroPR) {
+        var detalle = ObtenerEstado(numeroPR);
+
+        if (!string.Equals(detalle.Estado, "open")) {
+            Console.WriteLine($"Error al mergear el PR #{numeroPR}: el PR no está abierto.");
+            return false;
+        }
+
+        (string salida, int codigoSalida) = EjecutarGH(
+            $"Error al mergear el PR #{numeroPR}",
+            new[] { "pr", "merge", numeroPR.ToString(), "--repo", $"{owner}/{repo}", "--auto", "--merge" });
+
+        return (codigoSalida == 0);
+    }
+
+    public int MergearTP(int numeroTP) {
+        if (numeroTP <= 0) {
+            Console.WriteLine("Error al mergear PRs: el número de TP debe ser mayor a cero.");
+            return 0;
+        }
+
+        List<(int Numero, string Titulo)> prs = ListarPR(soloAbiertos: true)
+            .Where(pr => EsPRDeTP(pr.Titulo, numeroTP))
+            .ToList();
+
+        if (prs.Count == 0) {
+            Console.WriteLine($"No se encontraron PRs abiertos del TP {numeroTP}.");
+            return 0;
+        }
+
+        int mergesRealizados = 0;
+
+        foreach ((int Numero, string Titulo) pr in prs) {
+            Console.WriteLine($"Mergeando PR #{pr.Numero}: {pr.Titulo}");
+
+            if (MergeAutomatico(pr.Numero)) {
+                mergesRealizados++;
+            }
+        }
+
+        Console.WriteLine($"PRs mergeados del TP {numeroTP}: {mergesRealizados}/{prs.Count}");
+        return mergesRealizados;
     }
 
     public bool CambiarTituloPR(int numeroPR, string nuevoTitulo) {
@@ -90,25 +226,19 @@ class GitHub {
 
         string titulo = nuevoTitulo.Trim();
 
-        (string salida, string error, int codigoSalida) = EjecutarGh(new[]
-        { "api", "--method", "PATCH", $"repos/{owner}/{repo}/pulls/{numeroPR}", "-f", $"title={titulo}" });
+        (string salida, int codigoSalida) = EjecutarGH(
+            $"Error al cambiar el título del PR #{numeroPR}",
+            new[] { "api", "--method", "PATCH", $"repos/{owner}/{repo}/pulls/{numeroPR}", "-f", $"title={titulo}" });
 
-        if (codigoSalida != 0) {
-            string detalle = string.IsNullOrWhiteSpace(error) ? salida : error;
-            Console.WriteLine($"Error al cambiar el título del PR #{numeroPR}: {detalle}");
-            return false;
-        }
-
-        return true;
+        return (codigoSalida == 0);
     }
 
-    public List<(string Titulo, DateTimeOffset FechaHora)> ListarCommitsPR(int numeroPR) {
-        (string salida, string error, int codigoSalida) = EjecutarGh(new[]
-        { "api", $"repos/{owner}/{repo}/pulls/{numeroPR}/commits", "--paginate", "--jq", ".[] | \"\\(.commit.message | split(\"\\n\")[0])\\t\\(.commit.author.date)\"" });
+    public List<(string Titulo, DateTimeOffset FechaHora)> ListarCommits(int numeroPR) {
+        (string salida, int codigoSalida) = EjecutarGH(
+            $"Error al listar commits del PR #{numeroPR}",
+            new[] { "api", $"repos/{owner}/{repo}/pulls/{numeroPR}/commits", "--paginate", "--jq", @".[] | ""\(.commit.message | split(""\n"")[0])\t\(.commit.author.date)""" });
 
         if (codigoSalida != 0) {
-            string detalle = string.IsNullOrWhiteSpace(error) ? salida : error;
-            Console.WriteLine($"Error al listar commits del PR #{numeroPR}: {detalle}");
             return new();
         }
 
@@ -128,54 +258,35 @@ class GitHub {
             commits.Add((partes[0], fechaHora));
         }
 
+        commits.Sort((a, b) => a.FechaHora.CompareTo(b.FechaHora));
         return commits;
     }
 
-    bool? ObtenerMergeablePR(int numeroPR) {
-        (string salida, string error, int codigoSalida) = EjecutarGh(new[]
-        { "api", $"repos/{owner}/{repo}/pulls/{numeroPR}", "--jq", ".mergeable" });
-
-        if (codigoSalida != 0) {
-            string detalle = string.IsNullOrWhiteSpace(error) ? salida : error;
-            Console.WriteLine($"Error al consultar si el PR #{numeroPR} es mergeable: {detalle}");
-            return null;
-        }
-
-        string valor = salida.Trim();
-
-        if (string.Equals(valor, "true", StringComparison.OrdinalIgnoreCase)) {
-            return true;
-        }
-
-        if (string.Equals(valor, "false", StringComparison.OrdinalIgnoreCase)) {
-            return false;
-        }
-
-        return null;
-    }
-
-    (string Salida, string Error, int CodigoSalida) EjecutarGh(IEnumerable<string> argumentos) {
+    
+    (string Salida, int CodigoSalida) EjecutarGH(string mensajeError, IEnumerable<string> argumentos) {
         ProcessStartInfo startInfo = new ProcessStartInfo {
             FileName = "gh",
             RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardError  = true
         };
 
         foreach (string argumento in argumentos) {
             startInfo.ArgumentList.Add(argumento);
         }
 
-        // Console.WriteLine($"Ejecutando gh {string.Join(' ', argumentos)}...");
-
-        using Process proceso = Process.Start(startInfo)
-            ?? throw new InvalidOperationException("No se pudo iniciar gh.");
+        using Process proceso = Process.Start(startInfo) ?? throw new InvalidOperationException("No se pudo iniciar gh.");
 
         string salida = proceso.StandardOutput.ReadToEnd().Trim();
-        string error = proceso.StandardError.ReadToEnd().Trim();
+        string error  = proceso.StandardError.ReadToEnd().Trim();
 
         proceso.WaitForExit();
 
-        return (salida, error, proceso.ExitCode);
+        if (proceso.ExitCode != 0) {
+            string detalle = string.IsNullOrWhiteSpace(error) ? salida : error;
+            Console.WriteLine($"{mensajeError}: {detalle}");
+        }
+
+        return (salida, proceso.ExitCode);
     }
 
     
@@ -186,6 +297,15 @@ class GitHub {
                     .Select(linea => pasarAMinusculas ? linea.ToLower() : linea)
                     .Where(linea => !string.IsNullOrWhiteSpace(linea))
                     .ToList();
+    }
+
+    static int ExtraerLegajo(string titulo) {
+        Match match = Regex.Match(titulo, @"\b\d{5}\b");
+        return match.Success ? int.Parse(match.Value) : 0;
+    }
+
+    static bool EsPRDeTP(string titulo, int numeroTP) {
+        return ExtraerTP(titulo) == numeroTP;
     }
 
     
