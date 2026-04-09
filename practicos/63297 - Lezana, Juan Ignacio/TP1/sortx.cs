@@ -108,7 +108,35 @@ List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
 
     return rows;
 }
-List<Dictionary<string,string>> SortRows(List<Dictionary<string,string>> rows, AppConfig config) => throw new NotImplementedException();
+
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    rows.Sort((a, b) =>
+    {
+        foreach (var field in config.SortFields)
+        {
+            int result;
+
+            if (field.Numeric)
+            {
+                double va = double.Parse(a[field.Name]);
+                double vb = double.Parse(b[field.Name]);
+                result = va.CompareTo(vb);
+            }
+            else
+            {
+                result = string.Compare(a[field.Name], b[field.Name]);
+            }
+
+            if (result != 0)
+                return field.Descending ? -result : result;
+        }
+        
+        return 0;
+    });
+
+    return rows;
+}
 string Serialize(List<Dictionary<string,string>> rows, AppConfig config) => throw new NotImplementedException();
 void WriteOutput(string output, AppConfig config) => throw new NotImplementedException();
 
