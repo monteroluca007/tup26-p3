@@ -187,3 +187,20 @@ string Serializar(List<Dictionary<string, string>> filas, ConfiguracionApp confi
     }
     return string.Join("\n", lineas);
 }
+
+void EscribirSalida(ConfiguracionApp config, string salida)
+{
+    if (config.ArchivoSalida != null)
+        File.WriteAllText(config.ArchivoSalida, salida);
+    else
+        Console.WriteLine(salida);
+}
+
+record CampoOrden(string Nombre, bool EsNumerico, bool Descendente);
+record ConfiguracionApp(
+    string? ArchivoEntrada,
+    string? ArchivoSalida,
+    string Delimitador,
+    bool SinEncabezado,
+    List<CampoOrden> CamposOrden
+);
