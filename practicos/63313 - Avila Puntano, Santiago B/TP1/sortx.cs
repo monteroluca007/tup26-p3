@@ -10,7 +10,7 @@ using Microsoft.VisualBasic.FileIO;
 
 Console.WriteLine($"sortx {string.Join(" ", args)}");
 
-
+try{
 // este appconfig guarda los datos temporalmente, a diferencia del record que los toma al final
 AppConfig parseargs(string[] args)
 {
@@ -106,7 +106,7 @@ string readinput(AppConfig cfg)
     return Console.In.ReadToEnd(); 
 }
 // lista de fila y encabezado en base al texto de archivo cfg
-(List<Dictionary<string,string>> rows, string[]? Header) parsedelimited(string text, AppConfig cfg)
+(List<Dictionary<string,string>> rows, string[]? header) parsedelimited(string text, AppConfig cfg)
 {
     // el templines va a tener todas las lineas incluyendo las vacias tambien, despues con el split separa en lineas y por ultimo se eliminan las lineas vacias.
     var tempLines = text
@@ -155,10 +155,10 @@ string readinput(AppConfig cfg)
         rows.Add(row);
     }
     
-    if (cfg.sortFields.Count > 0 && rows.Count > 0) //toma en cuenta la cantidad de elementos de sort fields y la cantidad de elementos de row 
+    if (cfg.SortFields.Count > 0 && rows.Count > 0) //toma en cuenta la cantidad de elementos de sort fields y la cantidad de elementos de row 
     {
         var firstrow = rows[0]; // guarda el valor de la primera fila de rows en la variable firstrow
-        foreach (var sf in cfg.sortFields) //bucle en donde la variable sf es temporal y toma los datos de cfg sort fields
+        foreach (var sf in cfg.SortFields) //bucle en donde la variable sf es temporal y toma los datos de cfg sort fields
         {
             if (!firstrow.ContainsKey(sf.Name)) // si no existe la condicion de que la primera fila contenga la clave del campo de ordenamiento
             {
@@ -219,8 +219,8 @@ string readinput(AppConfig cfg)
         return rows;
     }
 
-    if (cfg.sortFields.Count > 0 && rows.Count > 0)
-        rows = sortrows(rows, cfg.sortFields);
+    if (cfg.SortFields.Count > 0 && rows.Count > 0)
+        rows = sortrows(rows, cfg.SortFields);
 
     return (rows, header);
 }
@@ -230,21 +230,21 @@ string serialize(List<Dictionary<string, string>> rows, string[]? header, AppCon
     var lines = new List<string>();  // lista string para guardar las lineas a escribir en el archivo de salida
 
     
-    if (!cfg.NoHeader && headers != null)
+    if (!cfg.NoHeader && header != null)
     {
-        lines.Add(string.Join(cfg.Delimiter, headers)); //s i hay encabezado se agrega a las lineas el encabezado con el delimitador
+        lines.Add(string.Join(cfg.Delimiter, header)); //s i hay encabezado se agrega a las lineas el encabezado con el delimitador
 
         foreach (var row in rows) // bucle que recorre las filas
         {
             string line = ""; // variable temporal para guardar la linea a escribir en el archivo de salida
 
-            for (int i = 0; i < headers.Length; i++) // for q recorre  las columnas del encabezado
+            for (int i = 0; i < header.Length; i++) // for q recorre  las columnas del encabezado
             {
                 if (i > 0)
                     line += cfg.Delimiter; // si la columna es mayor a 0 se agrega el delimitador 
 
-                if (row.ContainsKey(headers[i])) // si la linea contiene la clave 
-                    line += row[headers[i]];
+                if (row.ContainsKey(header[i])) // si la linea contiene la clave 
+                    line += row[header[i]];
                 else
                     line += ""; // si no contiene la clave se agrega un valor vacio
             }
@@ -273,13 +273,78 @@ string serialize(List<Dictionary<string, string>> rows, string[]? header, AppCon
         }
     }
 
-    return string.Join("\n", lines);
+    return string.Join("\n", lines); // se devuelve un string con todas las lineas unidas con salto de linea 
 }
 
+    void writeoutput(string text, AppConfig cfg) // 
+    {
+        if (cfg.OutputFile != null)  // se verifica que el archivo de salida no sea null
+            File.WriteAllText(cfg.OutputFile, text); // si el archivo de salida no es null se escribe el texto en el archivo de salida
+        else
+            Console.Write(text); // si el archivo de salida es null se escribe el texto en la consola
+     }
 
+    void ShowHelp()
+    {
+    
+      Console.WriteLine("""
+        sortx — Ordena archivos de texto delimitados (CSV, TSV, PSV, etc.)
 
+        USO:
+          sortx [input [output]] [-b campo[:tipo[:orden]]]... [opciones]
+          dotnet run sortx.cs -- [input [output]] [-b campo[:tipo[:orden]]]... [opciones]
 
+        OPCIONES:
+          -b, --by campo[:tipo[:orden]]   Campo de ordenamiento (repetible).
+                                            tipo  : alpha (default) | num
+                                            orden : asc  (default)  | desc
+          -i, --input  <archivo>          Archivo de entrada  (default: stdin).
+          -o, --output <archivo>          Archivo de salida   (default: stdout).
+          -d, --delimiter <delim>         Delimitador         (default: ,).
+                                            Usar \t para tabulación.
+          -nh, --no-header                Sin encabezado; campos por índice (0, 1, 2...).
+          -ay,  --ayuda                     Muestra esta ayuda y termina.
 
+        EJEMPLOS:
+          sortx empleados.csv -b apellido
+          sortx empleados.csv -b salario:num:desc
+          sortx empleados.csv -b departamento -b salario:num:desc
+          sortx empleados.csv resultado.csv -b apellido
+          sortx -i empleados.csv -o resultado.csv -b apellido
+          sortx datos.tsv -d "\t" -nh -b 1:alpha:asc
+          cat empleados.csv | sortx -b apellido > ordenado.csv
+        """);
+    }
+
+    var config = parseargs(args);
+
+    if (config.ShowHelp)
+    {
+        ShowHelp();
+        return; // exit 0
+    }
+
+    var rawText = readinput(config);
+    var (rows, headers) = parsedelimited(rawText, config);
+    var output = serialize(rows, headers, config);
+    writeoutput(output, config);
+}
+catch (ArgumentException ex)
+{
+    Console.Error.WriteLine($"Error de argumentos: {ex.Message}");
+    Console.Error.WriteLine("Use --help para ver la ayuda.");
+    Environment.Exit(1);
+}
+catch (FileNotFoundException ex)
+{
+    Console.Error.WriteLine($"Error: Archivo no encontrado — {ex.FileName}");
+    Environment.Exit(1);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error inesperado: {ex.Message}");
+    Environment.Exit(1);
+}
  //commit 1
 record SortField(string Name, bool Numeric, bool Descending);
 
@@ -291,5 +356,3 @@ record AppConfig(
     bool ShowHelp,
     List<SortField> SortFields
 );
-
-
