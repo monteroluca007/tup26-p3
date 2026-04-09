@@ -168,8 +168,14 @@ string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
 
     return result;
 }
-void WriteOutput(string output, AppConfig config) => throw new NotImplementedException();
 
+void WriteOutput(string output, AppConfig config)
+{
+    if (config.OutputFile != null)
+        File.WriteAllText(config.OutputFile, output);
+    else
+        Console.WriteLine(output);
+}
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
