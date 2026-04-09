@@ -7,6 +7,12 @@ try
     string texto = ReadInput(configuracion);
     List<Dictionary<string, string>> filas = ParseDelimited(texto, configuracion.Delimitador, configuracion.noheader);
     List<Dictionary<string, string>> orden = SortRow(filas, configuracion);
+    
+    // Convertimos la lista ordenada de nuevo a texto
+    string resultado = Serialize(orden, configuracion);
+    
+    // Escribimos el resultado
+    WriteOutput(resultado, configuracion);
 }
 catch (Exception e)
 {
@@ -68,9 +74,7 @@ static AppConfig ParseArgs(string[] argumentos)
         }
     }
     return new AppConfig(entrada, Salida, Delimitador, noheader, sortfields);
-
 }
-
 static string ReadInput(AppConfig configuracion)
 
 {
@@ -83,8 +87,6 @@ static string ReadInput(AppConfig configuracion)
         return In.ReadToEnd();
     }
 }
-
-
 static List<Dictionary<string, string>> ParseDelimited(string texto, string? delimitador, bool noheader)
 {
     string[] linea = texto.Split('\n'); // Divido por fila
@@ -93,7 +95,7 @@ static List<Dictionary<string, string>> ParseDelimited(string texto, string? del
 
     if (noheader == false)
     {
-        string[] encabezado = linea[0].Split(delimitador); // nombres columna 
+        string[] encabezado = linea[0].Trim().Split(delimitador); // nombres columna 
 
         for (int i = 1; i < linea.Length; i++) //recorre las filas
         {
@@ -121,14 +123,12 @@ static List<Dictionary<string, string>> ParseDelimited(string texto, string? del
                 fila.Add(encabezado[j], valores[j]); //agrego al diccionario 
             }
             filas.Add(fila);
-            fila = [];
+            fila = []; // limpia la variable para la siguiente fila
         }
     }
-
     return filas;
 
 }
-//4. SortRows       → ordenar las filas según los criterios configurados
 
 static List<Dictionary<string, string>> SortRow(List<Dictionary<string, string>> filas, AppConfig configuracion)
 {
@@ -160,8 +160,21 @@ static List<Dictionary<string, string>> SortRow(List<Dictionary<string, string>>
 
 static string Serialize(List<Dictionary<string, string>> filas, AppConfig config)
 {
-   
+    if (filas.Count == 0) return "";
 
+    List<string> lineas = [];
+
+    if (!config.noheader)
+    {
+        lineas.Add(string.Join(config.Delimitador, filas[0].Keys));
+    }
+
+    foreach (var fila in filas)
+    {
+        lineas.Add(string.Join(config.Delimitador, fila.Values));
+    }
+
+    return string.Join("\n", lineas);
 }
 static void WriteOutput(string contenido, AppConfig configuracion) //salida
 {
@@ -177,27 +190,3 @@ static void WriteOutput(string contenido, AppConfig configuracion) //salida
 record SortField(string campo, bool alpha, bool num, bool desc, bool asc); // campo por el que ordena. 
 record AppConfig(string? Entrada, string? Salida, string Delimitador, bool noheader, List<SortField> sortfields);
 
-/*
-sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
-      [-i|--input input] [-o|--output output]
-      [-d|--delimiter delimitador]
-      [-nh|--no-header] [-h|--help]
-
-| `--by`          | `-b`   | Campo por el que ordenar. Se puede repetir para ordenamiento múltiple. |
-| `--no-header`   | `-nh`  | Indica que el archivo no tiene fila de encabezado. En ese caso los campos se identifican por su índice numérico (0, 1, 2...). |
-
-Cada valor de `--by` tiene el formato `campo[:tipo[:orden]]`, donde:
-
-- **`campo`** — nombre de la columna (si hay encabezado) o índice numérico desde 0 (si no   hay encabezado).
-- **`tipo`** — criterio de comparación:
-                             `alpha` — comparación alfabética (default).
-  -                          `num` — comparación numérica.
-- **`orden`** — dirección:
-  -                           `asc` — ascendente (default).
-  -                           `desc` — descendente.
-
-4. SortRows       → ordenar las filas según los criterios configurados
-5. Serialize      → convertir las filas ordenadas de vuelta a texto
-
-
-*/
