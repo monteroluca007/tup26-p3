@@ -106,8 +106,8 @@ string readinput(AppConfig cfg)
     return Console.In.ReadToEnd(); 
 }
 // lista de fila y encabezado en base al texto de archivo cfg
-(List<Dictionary<string,string>> rows, string[]? Header) parsedelimited(string text, AppConfig cfg);
-
+(List<Dictionary<string,string>> rows, string[]? Header) parsedelimited(string text, AppConfig cfg)
+{
     // el templines va a tener todas las lineas incluyendo las vacias tambien, despues con el split separa en lineas y por ultimo se eliminan las lineas vacias.
     var tempLines = text
         .Replace("\r\n", "\n")
@@ -118,8 +118,6 @@ string readinput(AppConfig cfg)
     if (lines.Length == 0)
         return (new List<Dictionary<string, string>>(), null);
 
-
-
     string[] header;
     int dataStart;
 
@@ -128,103 +126,155 @@ string readinput(AppConfig cfg)
         header = lines[0].Split(cfg.Delimiter);
         dataStart = 1;
     }
-else
-{
-    header = null;
-    dataStart = 0;
-}
-var rows = new List<Dictionary<string, string>>(); //guardo los datos de listas en esta variable rows
-for (int lineIdx = dataStart; lineIdx < lines.Length; lineIdx++) // recorre las lineas del archivo en base al data start y si es q hay encabezado o no
-{
-    var values = lines[lineIdx].Split(cfg.Delimiter); // se guardan los datos spliteados en values
-
-    var row = new Dictionary<string, string>(); // se crea una carpeta vacia para guardar los datos de cada fila.
-
-    if (!cfg.NoHeader && header is not null)
+    else
     {
-        for (int col = 0; col < header.Length; col++) // bucle q recorre las columnas de las columnas 0 al 3
+        header = null;
+        dataStart = 0;
+    }
+    
+    var rows = new List<Dictionary<string, string>>(); //guardo los datos de listas en esta variable rows
+    for (int lineIdx = dataStart; lineIdx < lines.Length; lineIdx++) // recorre las lineas del archivo en base al data start y si es q hay encabezado o no
+    {
+        var values = lines[lineIdx].Split(cfg.Delimiter); // se guardan los datos spliteados en values
+        var row = new Dictionary<string, string>(); // se crea una carpeta vacia para guardar los datos de cada fila.
+
+        if (!cfg.NoHeader && header is not null)
         {
-            row[header[col]] = col < values.Length ? values[col] : string.Empty; // se guarda en  la var row el valor de cada columna
+            for (int col = 0; col < header.Length; col++) // bucle q recorre las columnas de las columnas 0 al 3
+            {
+                row[header[col]] = col < values.Length ? values[col] : string.Empty; // se guarda en  la var row el valor de cada columna
+            }
+        }
+        else
+        {
+            for (int col = 0; col < values.Length; col++)
+            {
+                row[col.ToString()] = values[col];
+            }
+        }
+        rows.Add(row);
+    }
+    
+    if (cfg.sortFields.Count > 0 && rows.Count > 0) //toma en cuenta la cantidad de elementos de sort fields y la cantidad de elementos de row 
+    {
+        var firstrow = rows[0]; // guarda el valor de la primera fila de rows en la variable firstrow
+        foreach (var sf in cfg.sortFields) //bucle en donde la variable sf es temporal y toma los datos de cfg sort fields
+        {
+            if (!firstrow.ContainsKey(sf.Name)) // si no existe la condicion de que la primera fila contenga la clave del campo de ordenamiento
+            {
+                string available = "";
+                foreach (var key in firstrow.Keys) //bucle mostrando las columnas de row y se guardan en key temporalmente 
+                {
+                    if (available.Length > 0) 
+                        available += ", ";
+                    available += key; 
+                    // se verifica si la var available tiene algun valor, si es que tiene se le agrega una , y despues el nombre de la columna que esta en key
+                }
+                throw new ArgumentException($"campo de ordenamiento desconocido: '{sf.Name}'. disponible: {available}"); // error si es que la primera fila no tiene clave sf
+            }
+        }
+    }
+    
+    List<Dictionary<string, string>> sortrows(List<Dictionary<string, string>> rows, List<SortField> sortFields)
+    {
+        if (sortFields.Count == 0 || rows.Count == 0) 
+            return rows; // si no hay criterio de ordernamiento o no hay filas se devuelve las filas sin ordenar
+        
+        rows.Sort((a, b) => // ordena la lista a y b 
+        {
+            foreach (var sf in sortFields) // recorremos los criterios de ordenamiento para comparar las filas a y b y se guardan en sf temporalmente
+            {
+                int cmp = 0;  // aqui se guardara e l resultado de la comparacion.
+
+                if (sf.Numeric) 
+                {
+                    // creacion de 2 variables a y b para guardar los valores numericos de las filas a y b , se inician en 0 por si no se pueden parsear a numero
+                    double va = 0; 
+                    double vb = 0; 
+
+                    //en caso de ser string se parsean a numero, si no se pueden parsear quedan en 0, se guardan en va y vb.
+                    double.TryParse(a[sf.Name], out va); 
+                    double.TryParse(b[sf.Name], out vb); 
+
+                    cmp = va.CompareTo(vb); // se guarda en cmp el resultado de la comparacion entre las dos variables
+                }
+                else
+                {
+                    // verificacion de que los valores de a y b no sean null, si son null se ponen como ""  de lo contrario quedan con el valor orig
+                    string va = a[sf.Name] ?? ""; 
+                    string vb = b[sf.Name] ?? "";
+                    cmp = string.Compare(va, vb, StringComparison.Ordinal); // comparacion guardada en cmp
+                }
+
+                if(cmp != 0) // si la comparacion es igual a 0 se debe decidir cual variable va primero, si cmp es distinto de 0 se devuelve el resultado de la comparacion teniendo en cuenta el ordenamiento ascendente o descendente
+                {
+                    if (sf.Descending)  // mayor a menor
+                        return -cmp;   // devuelve la fila que tenga el valor mayor
+                    else
+                        return cmp; // lo contrario la menor.
+                }
+            }
+                return 0;
+        });
+        return rows;
+    }
+
+    if (cfg.sortFields.Count > 0 && rows.Count > 0)
+        rows = sortrows(rows, cfg.sortFields);
+
+    return (rows, header);
+}
+
+string serialize(List<Dictionary<string, string>> rows, string[]? header, AppConfig cfg)
+{
+    var lines = new List<string>();  // lista string para guardar las lineas a escribir en el archivo de salida
+
+    
+    if (!cfg.NoHeader && headers != null)
+    {
+        lines.Add(string.Join(cfg.Delimiter, headers)); //s i hay encabezado se agrega a las lineas el encabezado con el delimitador
+
+        foreach (var row in rows) // bucle que recorre las filas
+        {
+            string line = ""; // variable temporal para guardar la linea a escribir en el archivo de salida
+
+            for (int i = 0; i < headers.Length; i++) // for q recorre  las columnas del encabezado
+            {
+                if (i > 0)
+                    line += cfg.Delimiter; // si la columna es mayor a 0 se agrega el delimitador 
+
+                if (row.ContainsKey(headers[i])) // si la linea contiene la clave 
+                    line += row[headers[i]];
+                else
+                    line += ""; // si no contiene la clave se agrega un valor vacio
+            }
+
+            lines.Add(line); // se agrega la linea a la lista de lineas
         }
     }
     else
     {
-        for (int col = 0; col < values.Length; col++)
+        foreach (var row in rows) //bucle que recorre todas las filas si no hay un headr
         {
-            row[col.ToString()] = values[col];
-        }
-    }
-    rows.Add(row);
-}
-    if (cfg.sortFields.Count > 0 && row.Count > 0) //toma en cuenta la cantidad de elementos de sort fields y la cantidad de elementos de row 
+            string line = ""; // variable temporal para guardar la linea a escribir en el archivo de salid
 
-    var firstrow = rows[0]; // guarda el valor de la primera fila de rows en la variable firstrow
-    foreach (var sf in cfg.sortFields) //bucle en donde la variable sf es temporal y toma los datos de cfg sort fields
-    {
-        if (!firstrow.ContainsKey(sf.Name)) // si no existe la condicion de que la primera fila contenga la clave del campo de ordenamiento
-        {
-            string available = "";
-            foreach (var key in firstrow.Keys) //bucle mostrando las columnas de row y se guardan en key temporalmente 
+            for (int i = 0; i < row.Count; i++) // bucle que recorre del 0 a 3
             {
-                if (available.Length > 0) 
-                available += ", ";
-                available += key; 
-                // se verifica si la var available tiene algun valor, si es que tiene se le agrega una , y despues el nombre de la columna que esta en key
+                if (i > 0)
+                    line += cfg.Delimiter; // si la columna es mayor a 0 se agrega el delimitador
+
+                string key = i.ToString(); // convierte el numero de columna a string  y lo guarda en key
+
+                if (row.ContainsKey(key)) // si la linea contiene la clave de la columna se agrega el valor a la linea
+                    line += row[key];
             }
-         throw new ArgumentException($"campo de ordenamiento desconocido: '{sf.Name}'. disponible: {available}"); // error si es que la primera fila no tiene clave sf
+
+            lines.Add(line);
         }
     }
-    return (rows, header); // devuelve las filas y el encabezado
 
-    List<Dictionary<string, string>> sortrows( //lista con clave string y valor string que representa los nombres de la fila y datos de estas,sortrows funcion q ordena las filas en base a rows
-     List<Dictionary<string, string>> rows, //lista de filas a ordenar
-     List<SortField> sortFields) //lista de criterios de ordenamiento
-    {
-        if (sortFields.Count == 0 || rows.Count == 0) 
-        return rows; // si no hay criterio de ordenamiento o filas devuelve las filas sin ordenar 
-    }
-     rows.Sort((a, b) => // ordenamo lista comparando fila a y b
- {
-     foreach (var sf in sortFields) // recorremos los criterios de ordenamiento para comparar las filas a y b y se guardan en sf temporalmente
-     {
-         int cmp = 0;  // aqui se guardara e l resultado de la comparacion.
-
-         if (sf.Numeric) 
-         {
-            // creacion de 2 variables a y b para guardar los valores numericos de las filas a y b , se inician en 0 por si no se pueden parsear a numero
-            double va = 0; 
-            double vb = 0; 
-
-             //en caso de ser string se parsean a numero, si no se pueden parsear quedan en 0, se guardan en va y vb.
-            double.TryParse(a[sf.Name], out va); 
-            double.TryParse(b[sf.Name], out vb); 
-
-            cmp = va.CompareTo(vb); // se guarda en cmp el resultado de la comparacion entre las dos variables
-         }
-
-         else
-         {
-            // verificacion de que los valores de a y b no sean null, si son null se ponen como ""  de lo contrario quedan con el valor orig
-             string va = a[sf.Name] ?? ""; 
-             string vb = b[sf.Name] ?? "";
-             cmp = string.Compare(va, vb, StringComparison.Ordinal); // comparacion guardada en cmp
-         }
-
-        if(cmp != 0) // si la comparacion es igual a 0 se debe decidir cual variable va primero, si cmp es distinto de 0 se devuelve el resultado de la comparacion teniendo en cuenta el ordenamiento ascendente o descendente
-        {
-            if (sf.Descending)  // mayor a menor
-                return -cmp;   // devuelve la fila que tenga el valor mayor
-            else
-                return cmp; // lo contrario la menor.
-        }
-     }
-     return 0;
-
- });
-    return rows;
-
-
-
+    return string.Join("\n", lines);
+}
 
 
 
