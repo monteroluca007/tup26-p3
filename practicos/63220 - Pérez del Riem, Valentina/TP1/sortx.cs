@@ -332,3 +332,28 @@ string Serialize(List<Dictionary<string, string>> rows, List<string> headers, Ap
 
     return string.Join(Environment.NewLine, lineas);
 }
+
+
+// 6. WriteOutput
+
+void WriteOutput(string texto, AppConfig config)
+{
+    if (config.OutputFile != null)
+    {
+        File.WriteAllText(config.OutputFile, texto);
+    }
+    else
+    {
+        Console.Write(texto);
+    }
+}
+
+record SortField(string Name, bool Numeric, bool Descending);
+
+record AppConfig(
+    string? InputFile,
+    string? OutputFile,
+    string Delimiter,
+    bool NoHeader,
+    List<SortField> SortFields
+);
