@@ -131,13 +131,43 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
             if (result != 0)
                 return field.Descending ? -result : result;
         }
-        
+
         return 0;
     });
 
     return rows;
 }
-string Serialize(List<Dictionary<string,string>> rows, AppConfig config) => throw new NotImplementedException();
+
+string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    if (rows.Count == 0) return "";
+
+    var headers = new List<string>();
+
+    foreach (var key in rows[0].Keys)
+        headers.Add(key);
+
+    string result = "";
+
+    if (!config.NoHeader)
+        result += string.Join(config.Delimiter, headers) + "\n";
+
+    foreach (var row in rows)
+    {
+        string line = "";
+
+        for (int i = 0; i < headers.Count; i++)
+        {
+            line += row[headers[i]];
+            if (i < headers.Count - 1)
+                line += config.Delimiter;
+        }
+
+        result += line + "\n";
+    }
+
+    return result;
+}
 void WriteOutput(string output, AppConfig config) => throw new NotImplementedException();
 
 record SortField(string Name, bool Numeric, bool Descending);
