@@ -78,6 +78,64 @@ string LeerEntrada(AppConfig config)
     return Console.In.ReadToEnd();
 }
 
+(List<Dictionary<string, string>> Filas, List<string> Encabezados) ParsearDelimitado(string texto, AppConfig config)
+{
+    var lineas = new List<string>();
+
+    foreach (var l in texto.Split('\n'))
+    {
+        var limpia = l.Trim('\r');
+        if (!string.IsNullOrWhiteSpace(limpia))
+            lineas.Add(limpia);
+    }
+
+    if (lineas.Count == 0)
+        throw new Exception("Archivo vacío");
+
+    List<string> encabezados = new List<string>();
+
+    if (!config.NoHeader)
+    {
+        var partes = Separar(lineas[0], config.Delimiter);
+        foreach (var p in partes)
+            encabezados.Add(p.Trim());
+
+        lineas.RemoveAt(0);
+    }
+    else
+    {
+        var partes = Separar(lineas[0], config.Delimiter);
+        for (int i = 0; i < partes.Length; i++)
+            encabezados.Add(i.ToString());
+    }
+
+    var filas = new List<Dictionary<string, string>>();
+
+    foreach (var linea in lineas)
+    {
+        var valores = Separar(linea, config.Delimiter);
+        var fila = new Dictionary<string, string>();
+
+        for (int i = 0; i < encabezados.Count; i++)
+        {
+            if (i < valores.Length)
+                fila[encabezados[i]] = valores[i].Trim();
+            else
+                fila[encabezados[i]] = "";
+        }
+
+        filas.Add(fila);
+    }
+
+    return (filas, encabezados);
+}
+
+
+string[] Separar(string linea, string delimitador)
+{
+    return linea.Split(new string[] { delimitador }, StringSplitOptions.None);
+}
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
