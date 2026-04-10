@@ -13,15 +13,10 @@ class Alumno {
 
     public string NombreCompleto => $"{Apellido}, {Nombre}".Trim().Trim(',');
     public string CarpetaNombre => $"{Legajo} - {NombreCompleto}";
-
     public string TelefonoId => FormatearTelefonoId(Telefono);
-
     public bool ConGithub => !string.IsNullOrWhiteSpace(GitHub) && GitHub.Length > 3;
-
     public bool ConFoto => TieneFoto;
-
     public bool ConTelefono => !string.IsNullOrWhiteSpace(Telefono);
-
 
     public static int Comparar(Alumno alumnoA, Alumno alumnoB) {
         int comparacion = string.Compare(FormatearComision(alumnoA), FormatearComision(alumnoB), StringComparison.OrdinalIgnoreCase);

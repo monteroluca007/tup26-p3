@@ -1,9 +1,30 @@
+using System.Runtime.CompilerServices;
+
 namespace Tup26.AlumnosApp;
 
 class Program {
     static void Main(string[] args) {
         Alumnos alumnos = AlumnosManager.Cargar(AppPaths.ArchivoAlumnos);
         
+        var practicos = File.ReadAllLines("./tp1.csv")
+            .Select(line => line.Trim().Split(',')[..2])
+            .Skip(1)
+            .Select(a => (legajo: int.Parse(a[0]), resuelto: int.Parse(a[1])>20))
+            .ToList();
+
+        foreach(var alumno in alumnos) {
+            alumno.Practico(1, Estado.Vacio);
+        }
+        foreach(var (legajo, resuelto) in practicos) {
+            Console.WriteLine($"Legajo: {legajo} - Resuelto: {resuelto}");
+            var alumno = alumnos.BuscarPorLegajo(legajo);
+            if (alumno != null) {
+                alumno.Practico(1, resuelto ? Estado.Aprobado : Estado.Desaprobado);
+                // alumno.Practico1Resuelto = resuelto;
+            }
+        }
+        AlumnosManager.Guardar(alumnos, "alumnos-p1.md");
+
         // AlumnosManager.Listar(alumnos.ConFotos(false), "Alumnos sin foto");
         // AlumnosManager.Listar(alumnos.ConTelefono(false), "Alumnos sin telefono");
         // AlumnosManager.Listar(alumnos.ConGithub(false).ConTelefono(true), "Alumnos sin GitHub");
@@ -36,21 +57,21 @@ class Program {
         // AlumnosManager.GuardarVCard(alumnos.ParaAgregar().EnComision("C9"), "alumnos-agregar-c9.vcf");
         // AlumnosManager.CopiarEnunciadoPracticos(alumnos, "tp1");
 
-        GitHub gh = new GitHub();
-        if (gh.PRSinLegajo() == 0) { 
-            gh.NormalizarTitulosPR(alumnos, simular: false); 
-        } 
-        foreach(var pr in gh.ListarPR()) {
-            var commits   = gh.ListarCommits(pr.Numero);
-            var detallePr = gh.ObtenerEstado(pr.Numero);
-            var estado    = detallePr.Estado == "open" ? "abierto" : detallePr.Estado == "closed" ? "cerrado" : "sin dato";
-            var mergeable = detallePr.EsMergeable ? "mergeable" : "con conflictos";
+        // GitHub gh = new GitHub();
+        // if (gh.PRSinLegajo() == 0) { 
+        //     gh.NormalizarTitulos(alumnos, simular: false); 
+        // } 
+        // foreach(var pr in gh.PullRequests()) {
+        //     var commits   = gh.Commits(pr.Numero);
+        //     var detallePr = gh.ObtenerEstado(pr.Numero);
+        //     var estado    = detallePr.Estado == "open" ? "abierto" : detallePr.Estado == "closed" ? "cerrado" : "sin dato";
+        //     var mergeable = detallePr.EsMergeable ? "mergeable" : "con conflictos";
 
-            Console.WriteLine($"- #{pr.Numero:D3} | {estado,-7} | {mergeable,-13} | {(commits.Count > 3 ? "🟢" : "🔴")} {commits.Count,2} | {pr.Titulo}");
-            foreach(var commit in commits) {
-                Console.WriteLine($" > {commit.FechaHora:dd-MM HH:mm} - {commit.Titulo} ()");
-            }
-        }
+        //     Console.WriteLine($"- #{pr.Numero:D3} | {estado,-7} | {mergeable,-13} | {(commits.Count > 3 ? "🟢" : "🔴")} {commits.Count,2} | {pr.Titulo}");
+        //     foreach(var commit in commits) {
+        //         Console.WriteLine($" > {commit.FechaHora:dd-MM HH:mm} - {commit.Titulo} ()");
+        //     }
+        // }
         // List<string> colaboradores = gh.ListarColaboradores();
         // List<string> invitaciones  = gh.ListarInvitacionesPendientes();
 

@@ -26,8 +26,8 @@ catch (Exception ex)
 
 AppConfig ParseArgs(string[] args)
 {
-    string input = null;
-    string output = null;
+    string? input = null;
+    string? output = null;
     string delimiter = ",";
     bool noHeader = false;
     var sortFields = new List<SortField>();
@@ -70,7 +70,7 @@ AppConfig ParseArgs(string[] args)
         }
     }
 
-    if (SortFields.Any())
+    if (sortFields.Any())
         throw new Exception("Debe especificar al menos un criterio de orden (-b)");
 
     return new AppConfig(input, output, delimiter, noHeader, sortFields);
