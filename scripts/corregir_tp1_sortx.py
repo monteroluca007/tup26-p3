@@ -217,7 +217,7 @@ def short_output(text: str, limit: int = 12) -> str:
 
 
 def format_failed_tests(failed_tests: list[tuple[int, str]]) -> str:
-    return "falla " + " ".join(f"{index}({name})" for index, name in failed_tests)
+    return "falla " + " ".join(f"{index}" for index, name in failed_tests)
 
 
 def render_progress(current: int, total: int, label: str = "", width: int = 24) -> None:
@@ -333,10 +333,17 @@ def evaluate_case( dll_path: Path, case: TestCase, case_dir: Path, timeout: int,
 
     return True, ""
 
+def ubicar_archivo(legajo: int, practicos_dir: Path) -> Path | None:
+    patron = f"{legajo}*/TP1/sortx.cs"
+    for child in practicos_dir.glob(patron):
+        if child.is_file():
+            return child
+
+    return None
 
 def evaluate_submission( legajo: int, practicos_dir: Path, temp_root: Path, build_timeout: int, run_timeout: int, test_cases: list[TestCase], ) -> Evaluation:
-    source_file = practicos_dir / str(legajo) / "TP1" / "sortx.cs"
-    if not source_file.is_file():
+    source_file = ubicar_archivo(legajo, practicos_dir)
+    if not source_file:
         return Evaluation(legajo, "no-presentado")
 
     line_count = count_lines(source_file)
@@ -393,13 +400,22 @@ def emit_results(results: list[Evaluation], verbose: bool) -> None:
 
 
 def write_results_csv(results: list[Evaluation], output_path: Path) -> None:
+    alumnos = leer_alumnos()
     with output_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle, lineterminator="\n")
-        writer.writerow(["legajo", "resultado"])
+        writer.writerow(["legajo", "nombre", "resultado"])
 
         for item in results:
-            writer.writerow([item.legajo, item.resultado])
+            writer.writerow([item.legajo, alumnos.get(item.legajo, "Desconocido"), item.resultado])
 
+def leer_alumnos():
+    lineas = open("../alumnos/alumnos.md", "r").readlines()
+    lineas = [linea for linea in lineas if re.match(r"^\d{5}\s{2,}", linea)]
+    salida = {}
+    for e in lineas:
+        legajo, nombre = re.match(r"^\s*(\d{5})\s{2,}(.*)\(", e).groups()
+        salida[int(legajo)] = nombre.strip()
+    return salida
 
 def main() -> int:
     args = parse_args()
@@ -422,8 +438,7 @@ def main() -> int:
 
         for index, legajo in enumerate(legajos, start=1):
             render_progress(index - 1, total, f"legajo {legajo}")
-            results.append(
-                evaluate_submission(
+            resultado = evaluate_submission(
                     legajo=legajo,
                     practicos_dir=args.practicos,
                     temp_root=temp_root,
@@ -431,7 +446,8 @@ def main() -> int:
                     run_timeout=args.run_timeout,
                     test_cases=test_cases,
                 )
-            )
+            results.append(resultado)
+            
             render_progress(index, total, f"legajo {legajo}")
 
         if total > 0:
@@ -442,4 +458,30 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # print(leer_alumnos())
+
+    # main()
+    lineas = open("../resultados-p1.csv", "r").readlines()
+    lineas = [(linea.strip("\n+")+",,,,").split(",")[:5] for linea in lineas]
+    print(f"| {'Legajo':6} | {'Nombre':30} | {'Resultado':12} | {'Detalle':40} |")
+
+    for linea in lineas[1:]:
+        # print(linea)
+        legajo, apellido, nombre, resultado,_ = linea
+        nombre = (apellido.strip('"') + ", " + nombre.strip('"'))
+        salida = "-|-|-|-|-|-|-|"
+        if "falla" in resultado:
+            test = resultado.split(" ")[1:] if "falla" in resultado else []
+            salida = " "
+            for i in range(1, 8):
+                if f"{i}" in test:
+                    salida += "❌ |"
+                else:
+                    salida += "✅ |"
+            
+        resultado = resultado.replace("no-presentado", "🔴")
+        resultado = resultado.replace("no-compila", "🟡")
+        resultado = resultado.replace("falla", "🔵")
+        resultado = resultado.replace("funciona", "🟢")
+        resultado = resultado.split(" ")[0]
+        print(f"|{legajo} | {nombre:30} | {resultado} | {salida} ")

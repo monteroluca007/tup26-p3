@@ -10,7 +10,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-Console.WriteLine($"sortx {string.Join(" ", args)}");
+try
+{
+    var config = ObtenerConfiguracion(args);
+    var lineas = LeerArchivo(config.Entrada);
+    var ordenadas = OrdenarLineas(lineas, config);
+    GuardarArchivo(config.Salida, ordenadas);
+
+    Console.WriteLine("Archivo procesado correctamente.");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error: {ex.Message}");
+}
 
 static Configuracion ObtenerConfiguracion(string[] args)
 {
@@ -63,23 +75,6 @@ static List<string> OrdenarLineas(List<string> lineas, Configuracion config)
     return lineas.OrderBy(x => x).ToList();
 }
 
-static void Main(string[] args)
-{
-    try
-    {
-        var config = ObtenerConfiguracion(args);
-        var lineas = LeerArchivo(config.Entrada);
-        var ordenadas = OrdenarLineas(lineas, config);
-        GuardarArchivo(config.Salida, ordenadas);
-
-        Console.WriteLine("Archivo procesado correctamente.");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-    }
-}
-
 static void MostrarAyuda()
 {
     Console.WriteLine("Uso del programa:");
@@ -95,36 +90,3 @@ static void MostrarAyuda()
 record CampoOrden(string Nombre, bool Descendente);
 
 record Configuracion(string Entrada, string Salida, bool Descendente, List<CampoOrden> Campos);
-
-class Program
-{
-    static void Main(string[] args)
-    {
-        Console.WriteLine("Iniciando aplicación...");
-    }
-
-    static Configuracion ObtenerConfiguracion(string[] args)
-    {
-        throw new NotImplementedException();
-    }
-
-    static List<string> LeerArchivo(string ruta)
-    {
-        throw new NotImplementedException();
-    }
-
-    static List<string> OrdenarLineas(List<string> lineas, Configuracion config)
-    {
-        throw new NotImplementedException();
-    }
-
-    static void GuardarArchivo(string ruta, List<string> lineas)
-    {
-        throw new NotImplementedException();
-    }
-
-    static void MostrarAyuda()
-    {
-        throw new NotImplementedException();
-    }
-}

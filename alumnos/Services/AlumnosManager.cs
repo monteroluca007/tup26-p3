@@ -122,32 +122,25 @@ static class AlumnosManager {
 
         foreach (Alumno alumno in alumnos) {
             string nombreCarpeta = alumno.CarpetaNombre;
-            string rutaCarpeta = Path.Combine(rutaBase, nombreCarpeta);
+            string rutaCarpeta   = Path.Combine(rutaBase, nombreCarpeta);
 
             try {
-                List<string> carpetasMismoLegajo = BuscarCarpetasMismoLegajo(rutaBase, alumno.Legajo);
+                List<string> carpetasConLegajo = BuscarCarpetasMismoLegajo(rutaBase, alumno.Legajo);
 
-                if (carpetasMismoLegajo.Count == 0) {
+                if (carpetasConLegajo.Count == 0) {
                     Directory.CreateDirectory(rutaCarpeta);
-                    Console.WriteLine($"Carpeta creada: {rutaCarpeta}");
-                    continue;
+                    Console.WriteLine($"➕ Carpeta creada: {rutaCarpeta}");
+                } else if (carpetasConLegajo.Count == 1){
+                    string rutaCarpetaExistente = carpetasConLegajo[0];
+                    if (string.Equals(rutaCarpetaExistente, rutaCarpeta, StringComparison.OrdinalIgnoreCase)) {
+                        Console.WriteLine($"✅ Carpeta existente correcta: {rutaCarpetaExistente}");
+                    } else {
+                        RenombrarCarpeta(rutaBase, rutaCarpetaExistente, rutaCarpeta);
+                        Console.WriteLine($"🔄 Carpeta renombrada: {rutaCarpetaExistente} -> {rutaCarpeta}");
+                    }
+                } else {
+                    Console.WriteLine($" ⚠️ Aviso: existen varias carpetas con el legajo {alumno.Legajo}. Revisar manualmente las duplicadas.");
                 }
-
-                if (carpetasMismoLegajo.Count > 1) {
-                    Console.WriteLine($"Hay múltiples carpetas para el legajo {alumno.Legajo}. Revisar manualmente antes de renombrar.");
-                    continue;
-                }
-
-                string rutaCarpetaExistente = carpetasMismoLegajo[0];
-                string nombreCarpetaExistente = Path.GetFileName(rutaCarpetaExistente);
-
-                if (nombreCarpetaExistente == nombreCarpeta) {
-                    Console.WriteLine($"Carpeta existente correcta: {rutaCarpetaExistente}");
-                    continue;
-                }
-
-                Directory.Move(rutaCarpetaExistente, rutaCarpeta);
-                Console.WriteLine($"Carpeta renombrada: {rutaCarpetaExistente} -> {rutaCarpeta}");
             }
             catch (Exception ex) {
                 Console.WriteLine($"Error al crear la carpeta para {nombreCarpeta}: {ex.Message}");
@@ -173,13 +166,8 @@ static class AlumnosManager {
                 continue;
             }
 
-            List<string> carpetasMismoLegajo = BuscarCarpetasMismoLegajo(rutaBase, alumno.Legajo);
-            if (carpetasMismoLegajo.Count != 1) {
-                continue;
-            }
-
-            string rutaCarpetaAlumno = carpetasMismoLegajo[0];
-            if (!Directory.Exists(rutaCarpetaAlumno)) {
+            string? rutaCarpetaAlumno = ObtenerCarpetaUnicaMismoLegajo(rutaBase, alumno.Legajo);
+            if (rutaCarpetaAlumno == null || !Directory.Exists(rutaCarpetaAlumno)) {
                 continue;
             }
 
@@ -540,7 +528,8 @@ static class AlumnosManager {
     }
 
     static bool TieneMismoLegajo(string nombreCarpeta, int legajo) {
-        return nombreCarpeta.StartsWith($"{legajo} - ") || nombreCarpeta.StartsWith($"{legajo}_");
+        //TODO: Verificar que el legajo esta en el nombre de la carpeta, considerando posibles formatos como "12345 - Nombre Apellido" o "12345_NombreApellido"
+        return nombreCarpeta.StartsWith($"{legajo}") || nombreCarpeta.StartsWith($"{legajo}_");
     }
 
     static List<string> BuscarCarpetasMismoLegajo(string rutaBase, int legajo) {
@@ -559,6 +548,37 @@ static class AlumnosManager {
         }
 
         return carpetasMismoLegajo;
+    }
+
+    static string? ObtenerCarpetaUnicaMismoLegajo(string rutaBase, int legajo) {
+        List<string> carpetasMismoLegajo = BuscarCarpetasMismoLegajo(rutaBase, legajo);
+
+        if (carpetasMismoLegajo.Count != 1) {
+            return null;
+        }
+
+        return carpetasMismoLegajo[0];
+    }
+
+    static string ObtenerRutaCarpetaPreferida(List<string> carpetasConLegajo, string nombreCarpetaEsperado) {
+        return carpetasConLegajo
+            .FirstOrDefault(carpeta => string.Equals(Path.GetFileName(carpeta), nombreCarpetaEsperado, StringComparison.OrdinalIgnoreCase))
+            ?? carpetasConLegajo[0];
+    }
+
+    static void RenombrarCarpeta(string rutaBase, string rutaActual, string rutaNueva) {
+        if (!Directory.Exists(rutaNueva)) {
+            Directory.Move(rutaActual, rutaNueva);
+            return;
+        }
+
+        if (!string.Equals(rutaActual, rutaNueva, StringComparison.OrdinalIgnoreCase)) {
+            throw new IOException($"Ya existe una carpeta destino: {rutaNueva}");
+        }
+
+        string rutaTemporal = Path.Combine(rutaBase, $".tmp-renombrar-{Guid.NewGuid():N}");
+        Directory.Move(rutaActual, rutaTemporal);
+        Directory.Move(rutaTemporal, rutaNueva);
     }
 
     static void CopiarContenidoDirectorio(string rutaOrigen, string rutaDestino) {

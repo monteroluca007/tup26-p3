@@ -10,7 +10,7 @@ LegajX  Nombre y Apellido                Teléfono         Foto  GitHub         
 63402   Condori, Nahuel Ariel            (381) 341-9689   No    NahuelC19                🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63419   Coronel, Tomás                   (381) 678-0335   Si    tomicor979-lgtm          🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63241   Cortez, Josias                   (381) 665-0808   No    josias57455              🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
-63330   Cuevas, Joel Alejandro           —                No    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+63330   Cuevas, Joel Alejandro           (-)              No    -                        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63776   Fuensalida, Ulises Nahuel        (381) 334-9851   Si    Ulisesfuensalida-ui      🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63396   Gil Garau, Atalia Trinidad       (381) 456-4405   Si    ataliagg                 🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 61577   Gonzalez, Lucas Alfredo E        (381) 669-4386   Si    Lucasgonzaa              🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
@@ -70,7 +70,7 @@ LegajX  Nombre y Apellido                Teléfono         Foto  GitHub         
 63388   López, Leandro Joel              (381) 360-4566   Si    Leandro-progam           🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63213   Marina Noguera, Morena Giovanna  (381) 354-0133   Si    mmore-cloud              🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63494   Medina, Lourdes Natalia          (381) 201-7153   Si    lumedina23               🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
-63418   Miranda, Gonzalo Emanuel         —                No    gonzalomiranda456        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+63418   Miranda, Gonzalo Emanuel         (—)              No    gonzalomiranda456        🔴⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63234   Molina, Lazaro Exequiel          (381) 416-0720   Si    Lazaro2005-Ml            🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63412   Morán, Facundo Martín            (381) 301-0206   Si    facumoran                🟢⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 63205   Navarro Aragón, Facundo          (381) 466-6665   Si    facundonavarroaragon     🟠⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️  ⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️⚪️

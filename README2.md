@@ -1,6 +1,9 @@
-# Trabajo Práctico — Herramienta CLI: `sortx`
+# Trabajo Práctico 1 — Herramienta CLI: `sortx`
 
-**Entrega:**  8 de ABRIL de 2025 a las 23:59hs
+**Materia:** Programación III  
+**Profesor:** Alejandro Di Battista
+**Modalidad:** Individual  
+**Entrega:** 8 de ABRIL de 2026 a las 23:59hs
 
 ---
 
@@ -200,4 +203,16 @@ Laura,González,38,95000,Gerencia
 
 > [!NOTE]
 > Si bien el comando `sortx` se menciona para ilustrar el uso, la entrega es un archivo `sortx.cs` que se compila y ejecuta con `dotnet run sortx.cs -- [args]`. 
+> No es necesario generar un ejecutable separado.
 
+> [!TIP]
+> Como se crea el ambiente de desarrollo:
+> [Ver Instrucciones de creacion del ambiente de desarrollo](./como-crear-entorno-desarrollo.md)
+
+> [!TIP]
+> Como entregar el trabajo:
+> [Ver Instrucciones de entrega](./como-entregar-practico.md)
+
+> [!TIP]
+> Como conseguir GitHub Copilot:
+> [Ver Instrucciones para conseguir GitHub Copilot](./como-conseguir-github-copilot.md)
