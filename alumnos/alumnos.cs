@@ -23,8 +23,11 @@ class Program {
                 // alumno.Practico1Resuelto = resuelto;
             }
         }
-        AlumnosManager.Guardar(alumnos, "alumnos-p1.md");
 
+        alumnos = alumnos.ConPractico(1, Estado.Desaprobado);
+        AlumnosManager.Guardar(alumnos, "alumnos-p1-sin-presentar.md");
+        AlumnosManager.CrearCarpetas(alumnos);
+        
         // AlumnosManager.Listar(alumnos.ConFotos(false), "Alumnos sin foto");
         // AlumnosManager.Listar(alumnos.ConTelefono(false), "Alumnos sin telefono");
         // AlumnosManager.Listar(alumnos.ConGithub(false).ConTelefono(true), "Alumnos sin GitHub");

@@ -199,10 +199,10 @@ static class AlumnosManager {
     }
 
     public static void CopiarEnunciadoPracticos(Alumnos alumnos, string practico) {
-        string nombrePractico = practico.Trim();
-        string rutaOrigen = Path.Combine(AppPaths.EnunciadosDirectory, nombrePractico);
+        string nombrePractico    = practico.Trim();
+        string rutaOrigen        = Path.Combine(AppPaths.EnunciadosDirectory, nombrePractico);
         string rutaBasePracticos = AppPaths.PracticosDirectory;
-        string carpetaPractico = nombrePractico.ToLower();
+        string carpetaPractico   = nombrePractico.ToLower();
 
         if (string.IsNullOrWhiteSpace(nombrePractico)) {
             Console.WriteLine("Debe indicar el nombre del práctico a copiar.");
