@@ -77,10 +77,10 @@
 
 
 ### Tareas
-> T1: Mostrar Helper
-> T2: Ordena por apellido
-> T3: Ordena por salario descendente
-> T4: Ordena por departamento y salario descendente
-> T5: Salida a archivo
-> T6: Entrada por stdin
-> T7: Columna inexistente
+- T1: Mostrar Helper
+- T2: Ordena por apellido
+- T3: Ordena por salario descendente
+- T4: Ordena por departamento y salario descendente
+- T5: Salida a archivo
+- T6: Entrada por stdin
+- T7: Columna inexistente
