@@ -47,6 +47,8 @@ class Program {
         if (gh.PRSinLegajo() == 0) { 
             gh.NormalizarTitulos(alumnos, simular: false); 
         } 
+
+        Alu
         // foreach(var pr in gh.PullRequests()) {
         //     var commits   = gh.Commits(pr.Numero);
         //     var detallePr = gh.ObtenerEstado(pr.Numero);
