@@ -6,22 +6,6 @@ class Program {
     static void Main(string[] args) {
         Alumnos alumnos = AlumnosManager.Cargar(AppPaths.ArchivoAlumnos);
         
-        var practicos = File.ReadAllLines("./tp1.csv")
-            .Select(line => line.Trim().Split(',')[..2])
-            .Skip(1)
-            .Select(a => (legajo: int.Parse(a[0]), resuelto: int.Parse(a[1])>20))
-            .ToList();
-
-        foreach(var alumno in alumnos) {
-            alumno.Practico(1, Estado.Vacio);
-        }
-        foreach(var (legajo, resuelto) in practicos) {
-            // Console.WriteLine($"Legajo: {legajo} - Resuelto: {resuelto}");
-            var alumno = alumnos.BuscarPorLegajo(legajo);
-            if (alumno != null) {
-                alumno.Practico(1, resuelto ? Estado.Aprobado : Estado.Desaprobado);
-            }
-        }
 
         // AlumnosManager.CrearCarpetas(alumnos);
         // alumnos = alumnos.ConPractico(1, Estado.Desaprobado);

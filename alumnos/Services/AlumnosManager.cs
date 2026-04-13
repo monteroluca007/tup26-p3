@@ -8,9 +8,9 @@ static class Log {
         Console.ForegroundColor = colorAnterior;
     }
 
-    public static void Debug(string mensaje) => Escribir(mensaje, ConsoleColor.Blue);
-    public static void Error(string mensaje) => Escribir(mensaje, ConsoleColor.Red);
-    public static void Info(string mensaje) => Escribir(mensaje, ConsoleColor.Green);
+    public static void Debug(string mensaje)   => Escribir(mensaje, ConsoleColor.Blue);
+    public static void Error(string mensaje)   => Escribir(mensaje, ConsoleColor.Red);
+    public static void Info(string mensaje)    => Escribir(mensaje, ConsoleColor.Green);
     public static void Warning(string mensaje) => Escribir(mensaje, ConsoleColor.Yellow);
 }
 
@@ -201,7 +201,7 @@ static class AlumnosManager {
         }
     }
 
-    public static void CopiarEnunciadoPracticos(Alumnos alumnos, string practico) {
+    public static void CopiarEnunciadoPracticos(Alumnos alumnos, string practico, bool forzar = false) {
         string nombrePractico    = practico.Trim();
         string rutaOrigen        = Path.Combine(AppPaths.EnunciadosDirectory, nombrePractico);
         string rutaBasePracticos = AppPaths.PracticosDirectory;
@@ -233,7 +233,7 @@ static class AlumnosManager {
             string rutaDestino = Path.Combine(rutaAlumno, carpetaPractico);
 
             try {
-                CopiarContenidoDirectorio(rutaOrigen, rutaDestino);
+                CopiarContenidoDirectorio(rutaOrigen, rutaDestino, forzar);
                 Log.Info($"Enunciado copiado: {rutaOrigen} -> {rutaDestino}");
             }
             catch (Exception ex) {
@@ -601,19 +601,24 @@ static class AlumnosManager {
         Directory.Move(rutaTemporal, rutaNueva);
     }
 
-    static void CopiarContenidoDirectorio(string rutaOrigen, string rutaDestino) {
+    static void CopiarContenidoDirectorio(string rutaOrigen, string rutaDestino, bool forzar = false) {
         Directory.CreateDirectory(rutaDestino);
 
         foreach (string archivoOrigen in Directory.GetFiles(rutaOrigen)) {
             string nombreArchivo = Path.GetFileName(archivoOrigen);
             string archivoDestino = Path.Combine(rutaDestino, nombreArchivo);
-            File.Copy(archivoOrigen, archivoDestino, overwrite: true);
+
+            if (!forzar && File.Exists(archivoDestino)) {
+                continue;
+            }
+
+            File.Copy(archivoOrigen, archivoDestino, overwrite: forzar);
         }
 
         foreach (string subdirectorioOrigen in Directory.GetDirectories(rutaOrigen)) {
             string nombreSubdirectorio = Path.GetFileName(subdirectorioOrigen);
             string subdirectorioDestino = Path.Combine(rutaDestino, nombreSubdirectorio);
-            CopiarContenidoDirectorio(subdirectorioOrigen, subdirectorioDestino);
+            CopiarContenidoDirectorio(subdirectorioOrigen, subdirectorioDestino, forzar);
         }
     }
 

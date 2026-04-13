@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import csv
 import os
 import re
@@ -16,11 +15,12 @@ from typing import TypedDict
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_CSV = REPO_ROOT / "alumnos" / "tp1.csv"
 DEFAULT_PRACTICOS = REPO_ROOT / "practicos"
 RESULTS_CSV = REPO_ROOT / "resultados-p1.csv"
 RESULTS_MD = REPO_ROOT / "resultado-p1.md"
 MIN_PRESENTED_LINES = 20
+BUILD_TIMEOUT = 20
+RUN_TIMEOUT = 5
 
 EMPLEADOS_CSV = """nombre,apellido,edad,salario,departamento
 Carlos,García,35,85000,Ingeniería
@@ -131,84 +131,24 @@ def build_test_cases() -> list[TestCase]:
             input_file_name=None,
             expected_stdout=ORDENADO_POR_APELLIDO,
         ),
-        TestCase(
-            name="columna-inexistente",
-            args=("empleados.csv", "-b", "columnaInexistente"),
-            expected_exit=None,
-            require_stderr_nonempty=False,
-        ),
     ]
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Compila y prueba todas las entregas TP1/sortx.cs dentro de practicos."
-    )
-    
-    parser.add_argument(
-        "--csv",
-        type=Path,
-        default=DEFAULT_CSV,
-        help=f"Archivo con legajos. Default: {DEFAULT_CSV}",
-    )
-    
-    parser.add_argument(
-        "--practicos",
-        type=Path,
-        default=DEFAULT_PRACTICOS,
-        help=f"Carpeta raiz de practicos. Default: {DEFAULT_PRACTICOS}",
-    )
-    
-    parser.add_argument(
-        "--legajo",
-        dest="legajos",
-        action="append",
-        type=int,
-        help="Evaluar solo uno o varios legajos. Repetible.",
-    )
-    
-    parser.add_argument(
-        "--build-timeout",
-        type=int,
-        default=20,
-        help="Timeout en segundos para compilar cada entrega. Default: 20",
-    )
-    
-    parser.add_argument(
-        "--run-timeout",
-        type=int,
-        default=5,
-        help="Timeout en segundos para cada prueba. Default: 5",
-    )
-    
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Incluye el detalle de compilacion o de la prueba fallida.",
-    )
-    
-    return parser.parse_args()
+def listar_legajos(practicos_dir: Path = DEFAULT_PRACTICOS) -> list[int]:
+    if not practicos_dir.is_dir():
+        return []
 
+    legajos: set[int] = set()
 
-def load_legajos(csv_path: Path, practicos_dir: Path) -> list[int]:
-    found: dict[int, None] = {}
+    for child in practicos_dir.iterdir():
+        if not child.is_dir():
+            continue
 
-    if csv_path.is_file():
-        with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
-            reader = csv.reader(handle)
-            for row in reader:
-                if not row:
-                    continue
-                token = row[0].strip()
-                if token.isdigit():
-                    found.setdefault(int(token), None)
+        coincidencia = re.match(r"^(\d+)", child.name)
+        if coincidencia:
+            legajos.add(int(coincidencia.group(1)))
 
-    if practicos_dir.is_dir():
-        for child in practicos_dir.iterdir():
-            if child.is_dir() and child.name.isdigit():
-                found.setdefault(int(child.name), None)
-
-    return sorted(found)
+    return sorted(legajos)
 
 
 def normalize_text(text: str) -> str:
@@ -268,20 +208,13 @@ def run_command( cmd: list[str], *, cwd: Path, timeout: int, stdin_text: str | N
     )
 
 
-def build_submission( source_file: Path, build_dir: Path, timeout: int, ) -> tuple[bool, Path | None, str]:
-    command = [ "dotnet", "build", str(source_file), "-o", str(build_dir), "-v:q", "--nologo", ]
-
-    try:
-        completed = run_command(command, cwd=source_file.parent, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        return False, None, "timeout compilando"
-
-    dll_path = build_dir / f"{source_file.stem}.dll"
-    if completed.returncode != 0 or not dll_path.is_file():
-        details = completed.stderr.strip() or completed.stdout.strip() or "compilacion fallida"
-        return False, None, short_output(details)
-
-    return True, dll_path, ""
+def es_error_compilacion(completed: subprocess.CompletedProcess[str]) -> bool:
+    salida = f"{completed.stdout}\n{completed.stderr}"
+    return (
+        "Build FAILED" in salida
+        or "The build failed" in salida
+        or bool(re.search(r"\berror (CS|NETSDK|MSB)\d+\b", salida, re.IGNORECASE))
+    )
 
 
 def prepare_case_dir(case_dir: Path, case: TestCase) -> None:
@@ -296,10 +229,10 @@ def prepare_case_dir(case_dir: Path, case: TestCase) -> None:
             output_file.unlink()
 
 
-def evaluate_case( dll_path: Path, case: TestCase, case_dir: Path, timeout: int, ) -> tuple[bool, str]:
+def evaluate_case(source_file: Path, case: TestCase, case_dir: Path, timeout: int) -> tuple[bool, str, bool]:
     prepare_case_dir(case_dir, case)
 
-    command = ["dotnet", "exec", str(dll_path), *case.args]
+    command = ["dotnet", "run", str(source_file), "--", *case.args]
 
     try:
         completed = run_command(
@@ -309,22 +242,26 @@ def evaluate_case( dll_path: Path, case: TestCase, case_dir: Path, timeout: int,
             stdin_text=case.stdin_text,
         )
     except subprocess.TimeoutExpired:
-        return False, f"{case.name}: timeout"
+        return False, f"{case.name}: timeout", False
+
+    if es_error_compilacion(completed):
+        details = completed.stderr.strip() or completed.stdout.strip() or "compilacion fallida"
+        return False, short_output(details), True
 
     if case.expected_exit is None:
         if completed.returncode == 0:
-            return False, f"{case.name}: esperaba codigo de salida distinto de 0"
+            return False, f"{case.name}: esperaba codigo de salida distinto de 0", False
     elif completed.returncode != case.expected_exit:
         return False, (
             f"{case.name}: codigo de salida {completed.returncode}, "
             f"esperado {case.expected_exit}"
-        )
+        ), False
 
     if case.require_stdout_nonempty and not completed.stdout.strip():
-        return False, f"{case.name}: salida estandar vacia"
+        return False, f"{case.name}: salida estandar vacia", False
 
     if case.require_stderr_nonempty and not completed.stderr.strip():
-        return False, f"{case.name}: salida de error vacia"
+        return False, f"{case.name}: salida de error vacia", False
 
     if case.expected_stdout is not None:
         actual_stdout = normalize_text(completed.stdout)
@@ -333,21 +270,21 @@ def evaluate_case( dll_path: Path, case: TestCase, case_dir: Path, timeout: int,
             return False, (
                 f"{case.name}: stdout inesperado. "
                 f"recibido={short_output(completed.stdout)}"
-            )
+            ), False
 
     if case.output_file_name and case.expected_output_file is not None:
         output_file = case_dir / case.output_file_name
         if not output_file.is_file():
-            return False, f"{case.name}: no genero {case.output_file_name}"
+            return False, f"{case.name}: no genero {case.output_file_name}", False
         actual_output = normalize_text(output_file.read_text(encoding="utf-8", errors="replace"))
         expected_output = normalize_text(case.expected_output_file)
         if actual_output != expected_output:
             return False, (
                 f"{case.name}: {case.output_file_name} inesperado. "
                 f"recibido={short_output(actual_output)}"
-            )
+            ), False
 
-    return True, ""
+    return True, "", False
 
 def ubicar_archivo(legajo: int, practicos_dir: Path) -> Path | None:
     patron = f"{legajo}*/TP1/sortx.cs"
@@ -357,7 +294,7 @@ def ubicar_archivo(legajo: int, practicos_dir: Path) -> Path | None:
 
     return None
 
-def evaluate_submission( legajo: int, practicos_dir: Path, temp_root: Path, build_timeout: int, run_timeout: int, test_cases: list[TestCase], ) -> Evaluation:
+def evaluate_submission(legajo: int, practicos_dir: Path, temp_root: Path, timeout: int, test_cases: list[TestCase]) -> Evaluation:
     source_file = ubicar_archivo(legajo, practicos_dir)
     if not source_file:
         return Evaluation(legajo, "no-presentado")
@@ -366,21 +303,16 @@ def evaluate_submission( legajo: int, practicos_dir: Path, temp_root: Path, buil
     if line_count < MIN_PRESENTED_LINES:
         return Evaluation(legajo, "no-presentado", f"archivo con {line_count} lineas")
 
-    build_dir = temp_root / f"build-{legajo}"
-    build_dir.mkdir(parents=True, exist_ok=True)
-
-    compiled, dll_path, build_details = build_submission(source_file, build_dir, build_timeout)
-    if not compiled or dll_path is None:
-        return Evaluation(legajo, "no-compila", build_details)
-
     warnings: list[str] = []
     failed_tests: list[tuple[int, str]] = []
     failed_details: list[str] = []
 
     for index, case in enumerate(test_cases, start=1):
         case_dir = temp_root / f"case-{legajo}-{index:02d}-{slugify(case.name)}"
-        ok, details = evaluate_case(dll_path, case, case_dir, run_timeout)
+        ok, details, es_compilacion = evaluate_case(source_file, case, case_dir, timeout)
         if not ok:
+            if es_compilacion:
+                return Evaluation(legajo, "no-compila", details)
             if case.optional:
                 warnings.append(details)
                 continue
@@ -402,17 +334,11 @@ def slugify(value: str) -> str:
     return value.strip("-") or "caso"
 
 
-def emit_results(results: list[Evaluation], verbose: bool) -> None:
+def emit_results(results: list[Evaluation]) -> None:
     write_results_csv(results, RESULTS_CSV)
 
     if RESULTS_CSV.is_file():
         print(f"✅ Resultados guardados en: {RESULTS_CSV}", file=sys.stderr)
-
-    writer = csv.writer(sys.stdout, lineterminator="\n")
-    writer.writerow(["legajo", "resultado"])
-
-    for item in results:
-        writer.writerow([item.legajo, item.resultado])
 
 
 def write_results_csv(results: list[Evaluation], output_path: Path) -> None:
@@ -453,11 +379,7 @@ def leer_alumnos() -> dict[int, dict[str, str]]:
 
 
 def main() -> int:
-    args = parse_args()
-    if args.legajos:
-        legajos = sorted(set(args.legajos))
-    else:
-        legajos = load_legajos(args.csv, args.practicos)
+    legajos = listar_legajos()
 
     if not legajos:
         print("No se encontraron legajos para evaluar.", file=sys.stderr)
@@ -475,10 +397,9 @@ def main() -> int:
             render_progress(index - 1, total, f"legajo {legajo}")
             resultado = evaluate_submission(
                     legajo=legajo,
-                    practicos_dir=args.practicos,
+                    practicos_dir=DEFAULT_PRACTICOS,
                     temp_root=temp_root,
-                    build_timeout=args.build_timeout,
-                    run_timeout=args.run_timeout,
+                    timeout=BUILD_TIMEOUT + RUN_TIMEOUT,
                     test_cases=test_cases,
                 )
             results.append(resultado)
@@ -488,7 +409,8 @@ def main() -> int:
         if total > 0:
             sys.stderr.write("\n")
 
-    emit_results(results, args.verbose)
+    emit_results(results)
+
     return 0
 
 
@@ -507,14 +429,14 @@ def _estado_y_pruebas(resultado: str) -> tuple[str, list[str]]:
     estado = resultado.split()[0]
 
     if estado == "funciona":
-        return "🟢", ["✅"] * 7
+        return "🟢", ["✅"] * 6
     if estado == "no-compila":
-        return "🟡", ["-"] * 7
+        return "🟡", ["-"] * 6
     if estado == "no-presentado":
-        return "🔴", ["-"] * 7
+        return "🔴", ["-"] * 6
 
     fallas = {int(valor) for valor in resultado.split()[1:] if valor.isdigit()}
-    pruebas = ["❌" if indice in fallas else "✅" for indice in range(1, 8)]
+    pruebas = ["❌" if indice in fallas else "✅" for indice in range(1, 7)]
     return "🔵", pruebas
 
 
@@ -552,12 +474,12 @@ def generar_informe(path: Path = RESULTS_CSV, output_path: Path = RESULTS_MD) ->
 
     for comision in sorted(por_comision, key=_orden_comision):
         filas = por_comision[comision]
-        filas.sort(key=lambda fila: (_orden_estado(fila["estado"]), fila["legajo"]))
+        filas.sort(key=lambda fila: (_orden_estado(fila["estado"]), fila["nombre"]))
 
         lineas.append(f"## {comision}")
         lineas.append("")
-        lineas.append("| Legajo | Nombre                          | R | T1 | T2 | T3 | T4 | T5 | T6 | T7 |")
-        lineas.append("|------|-----------------------------------|----|----|----|----|----|----|----|----|")
+        lineas.append("| Legajo | Nombre                       | R  | T1 | T2 | T3 | T4 | T5 |")
+        lineas.append("|------|--------------------------------|----|----|----|----|----|----|")
 
         for estado, titulo in [
             ("🟢", "FUNCIONA"),
@@ -572,9 +494,74 @@ def generar_informe(path: Path = RESULTS_CSV, output_path: Path = RESULTS_MD) ->
 
         lineas.append("")
 
-    output_path.write_text("\n".join(lineas).rstrip() + "\n", encoding="utf-8")
+    texto = """
+
+### Comandos para las pruebas:
+
+1. Help
+>   dotnet run sortx.cs -- --help
+
+2. Ordenar por apellido
+>   dotnet run sortx.cs -- empleados.csv -b apellido
+
+3. Ordenar por salario descendente
+>   dotnet run sortx.cs -- empleados.csv -b salario:num:desc
+
+4. Ordenar por departamento y salario descendente
+>   dotnet run sortx.cs -- empleados.csv -b departamento -b salario:num:desc
+
+5. Salida a archivo
+>   dotnet run sortx.cs -- empleados.csv -b apellido:alpha:asc -o salida.csv
+
+### Archivo de entrada (empleados.csv):
+```
+nombre,apellido,edad,salario,departamento
+Carlos,García,35,85000,Ingeniería
+Ana,Martínez,28,72000,Diseño
+Luis,Rodríguez,42,120000,Gerencia
+María,López,31,88000,Ingeniería
+Pedro,Sánchez,25,65000,Diseño
+Laura,González,38,95000,Gerencia
+```
+"""
+    
+    texto = "\n".join(lineas).rstrip() + "\n" +texto 
+    output_path.write_text(texto, encoding="utf-8")
+    print(f"✅ Informe guardado en: {RESULTS_MD}", file=sys.stderr)
 
 
 if __name__ == "__main__":
-    main()
+    # if main() == 0:
     generar_informe()
+    
+# Comandos ejecutados por cada entrega:
+#
+# Pruebas:
+# 1. Help
+#    dotnet run sortx.cs -- --help
+#
+# 2. Ordenar por apellido
+#    dotnet run sortx.cs -- empleados.csv --by apellido
+#
+# 3. Ordenar por salario descendente
+#    dotnet run sortx.cs -- empleados.csv --by salario:num:desc
+#
+# 4. Ordenar por departamento y salario descendente
+#    dotnet run sortx.cs -- empleados.csv --by departamento --by salario:num:desc
+#
+# 5. Salida a archivo
+#    dotnet run sortx.cs -- empleados.csv --by apellido:alpha:asc --output salida.csv
+#
+# 6. Entrada por stdin
+#    dotnet run sortx.cs -- --by apellido
+#    stdin: contenido de EMPLEADOS_CSV
+#
+        
+# empleados.css
+# nombre,apellido,edad,salario,departamento
+# Carlos,García,35,85000,Ingeniería
+# Ana,Martínez,28,72000,Diseño
+# Luis,Rodríguez,42,120000,Gerencia
+# María,López,31,88000,Ingeniería
+# Pedro,Sánchez,25,65000,Diseño
+# Laura,González,38,95000,Gerencia
