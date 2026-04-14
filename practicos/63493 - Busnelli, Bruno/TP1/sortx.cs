@@ -155,6 +155,79 @@ List<Dictionary<string, string>> ParseDelimited(string input, AppConfig config)
     return rows;
 }
 
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    if (config.SortFields.Count == 0)
+        return rows;
+
+    IOrderedEnumerable<Dictionary<string, string>>? ordered = null;
+
+    for (int i = 0; i < config.SortFields.Count; i++)
+    {
+        var field = config.SortFields[i];
+
+        Func<Dictionary<string, string>, object> keySelector;
+
+        if (field.Numeric)
+        {
+            keySelector = r => double.Parse(r[field.Name]);
+        }
+        else
+        {
+            keySelector = r => r[field.Name];
+        }
+
+        if (i == 0)
+        {
+            ordered = field.Descending
+                ? rows.OrderByDescending(keySelector)
+                : rows.OrderBy(keySelector);
+        }
+        else
+        {
+            ordered = field.Descending
+                ? ordered!.ThenByDescending(keySelector)
+                : ordered!.ThenBy(keySelector);
+        }
+    }
+
+    return ordered!.ToList();
+}
+
+string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    if (rows.Count == 0)
+        return "";
+
+    var lines = new List<string>();
+    var headers = rows[0].Keys.ToList();
+
+    if (!config.NoHeader)
+    {
+        lines.Add(string.Join(config.Delimiter, headers));
+    }
+
+    foreach (var row in rows)
+    {
+        var values = headers.Select(h => row.ContainsKey(h) ? row[h] : "");
+        lines.Add(string.Join(config.Delimiter, values));
+    }
+
+    return string.Join(Environment.NewLine, lines);
+}
+
+void WriteOutput(string output, AppConfig config)
+{
+    if (!string.IsNullOrEmpty(config.OutputFile))
+    {
+        File.WriteAllText(config.OutputFile, output);
+    }
+    else
+    {
+        Console.WriteLine(output);
+    }
+}
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
