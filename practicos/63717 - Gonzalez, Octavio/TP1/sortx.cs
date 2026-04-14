@@ -37,7 +37,7 @@ static AppConfig ParseArgs(string[] argumentos)
     //configuracion
     string? entrada = null;
     string? Salida = null;
-    string Delimitador = ","; // default comma delimiter
+    string Delimitador = ",";
     bool noheader = false;
     List<SortField> sortfields = [];
 
@@ -110,10 +110,10 @@ static List<Dictionary<string, string>> ParseDelimited(string texto, string? del
 
         for (int i = 1; i < linea.Length; i++) //recorre las filas
         {
-            // Skip empty lines
+ 
             if (string.IsNullOrWhiteSpace(linea[i])) continue;
 
-            Dictionary<string, string> fila = []; // new dictionary for each row
+            Dictionary<string, string> fila = []; 
             string[] valores = linea[i].Trim().Split(delimitador);
             for (int j = 0; j < valores.Length && j < encabezado.Length; j++)
             {
@@ -126,10 +126,10 @@ static List<Dictionary<string, string>> ParseDelimited(string texto, string? del
     {
         for (int i = 0; i < linea.Length; i++) //recorre las filas
         {
-            // Skip empty lines
+            
             if (string.IsNullOrWhiteSpace(linea[i])) continue;
 
-            Dictionary<string, string> fila = []; // new dictionary for each row
+            Dictionary<string, string> fila = []; 
             string[] valores = linea[i].Trim().Split(delimitador);
             string[] encabezado = new string[valores.Length];
             for (int j = 0; j < valores.Length; j++)
