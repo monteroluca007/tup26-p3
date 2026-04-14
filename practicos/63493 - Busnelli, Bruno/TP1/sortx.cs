@@ -111,6 +111,50 @@ string ReadInput(AppConfig config)
     return Console.In.ReadToEnd();
 }
 
+List<Dictionary<string, string>> ParseDelimited(string input, AppConfig config)
+{
+    var lines = input
+        .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+        .ToList();
+
+    var rows = new List<Dictionary<string, string>>();
+
+    if (lines.Count == 0)
+        return rows;
+
+    string[] headers;
+    int startIndex = 0;
+
+    if (!config.NoHeader)
+    {
+        headers = lines[0].Split(config.Delimiter).Select(h => h.Trim()).ToArray();
+        startIndex = 1;
+    }
+    else
+    {
+        var firstRow = lines[0].Split(config.Delimiter);
+        headers = Enumerable.Range(0, firstRow.Length)
+                            .Select(i => i.ToString())
+                            .ToArray();
+    }
+
+    for (int i = startIndex; i < lines.Count; i++)
+    {
+        var values = lines[i].Split(config.Delimiter);
+        var dict = new Dictionary<string, string>();
+
+        for (int j = 0; j < headers.Length; j++)
+        {
+            var value = j < values.Length ? values[j] : "";
+            dict[headers[j]] = value.Trim();
+        }
+
+        rows.Add(dict);
+    }
+
+    return rows;
+}
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
