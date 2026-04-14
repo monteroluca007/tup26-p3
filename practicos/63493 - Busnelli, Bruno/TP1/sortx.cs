@@ -61,7 +61,17 @@ AppConfig ParseArgs(string[] args)
             case "--no-header":
                 noHeader = true;
                 break;
+            case "-b":
+            case "--by":
+                var value = args[++i];
+                var parts = value.Split(':');
 
+                string name = parts[0];
+                bool numeric = parts.Length > 1 && parts[1] == "num";
+                bool descending = parts.Length > 2 && parts[2] == "desc";
+
+        sortFields.Add(new SortField(name, numeric, descending));
+                break;
             case "-h":
             case "--help":
         ShowHelp();
