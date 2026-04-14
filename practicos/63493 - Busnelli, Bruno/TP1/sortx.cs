@@ -51,6 +51,22 @@ AppConfig ParseArgs(string[] args)
             case "--output":
                 output = args[++i];
                 break;
+                case "-d":
+            case "--delimiter":
+                var d = args[++i];A
+                delimiter = d == "\\t" ? "\t" : d;
+                break;
+
+            case "-nh":
+            case "--no-header":
+                noHeader = true;
+                break;
+
+            case "-h":
+            case "--help":
+        ShowHelp();
+            Environment.Exit(0);
+                break;
 
             default:
                 throw new Exception($"Argumento desconocido: {arg}");
@@ -59,6 +75,20 @@ AppConfig ParseArgs(string[] args)
     }
 
     return new AppConfig(input, output, delimiter, noHeader, sortFields);
+}
+
+void ShowHelp()
+{
+    Console.WriteLine("Uso:");
+    Console.WriteLine("sortx [input [output]] [opciones]");
+    Console.WriteLine("");
+    Console.WriteLine("Opciones:");
+    Console.WriteLine("-b, --by campo[:tipo[:orden]]");
+    Console.WriteLine("-i, --input archivo");
+    Console.WriteLine("-o, --output archivo");
+    Console.WriteLine("-d, --delimiter delimitador");
+    Console.WriteLine("-nh, --no-header");
+    Console.WriteLine("-h, --help");
 }
 
 record SortField(string Name, bool Numeric, bool Descending);
