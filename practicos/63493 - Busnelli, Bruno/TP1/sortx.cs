@@ -53,7 +53,7 @@ AppConfig ParseArgs(string[] args)
                 break;
                 case "-d":
             case "--delimiter":
-                var d = args[++i];A
+                var d = args[++i];
                 delimiter = d == "\\t" ? "\t" : d;
                 break;
 
@@ -227,16 +227,6 @@ void WriteOutput(string output, AppConfig config)
         Console.WriteLine(output);
     }
 }
-
-record SortField(string Name, bool Numeric, bool Descending);
-
-record AppConfig(
-    string? InputFile,
-    string? OutputFile,
-    string Delimiter,
-    bool NoHeader,
-    List<SortField> SortFields
-);
 
 record SortField(string Name, bool Numeric, bool Descending);
 
