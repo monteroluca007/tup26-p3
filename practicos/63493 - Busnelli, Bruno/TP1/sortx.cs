@@ -101,6 +101,16 @@ void ShowHelp()
     Console.WriteLine("-h, --help");
 }
 
+string ReadInput(AppConfig config)
+{
+    if (!string.IsNullOrEmpty(config.InputFile))
+    {
+        return File.ReadAllText(config.InputFile);
+    }
+
+    return Console.In.ReadToEnd();
+}
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
