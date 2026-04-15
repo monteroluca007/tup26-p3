@@ -53,3 +53,36 @@ string ReadInput(AppConfig cfg){
         return "";
     }
 }
+var (header, rows) = ParseDelimited(text, config.Delimiter, config.NoHeader);
+
+(string[] header, List<string[]> rows) ParseDelimited(string text, string delim, bool noHeader){
+    text = text.Replace("\r\n","\n").Replace("\r","\n");
+    var lines = text.Split('\n', StringSplitOptions.None).ToList();
+    if(lines.Count>0 && lines[^1]=="") lines.RemoveAt(lines.Count-1);
+    if(lines.Count==0) return (Array.Empty<string>(), new List<string[]>());
+
+    var first = lines[0].Split(new[]{delim}, StringSplitOptions.None);
+    int cols = first.Length;
+    var rows = new List<string[]>();
+    string[] header;
+
+    if(noHeader){
+        header = Enumerable.Range(0,cols).Select(n=>n.ToString()).ToArray();
+        rows.Add(Pad(first, cols));
+    } else {
+        header = first;
+    }
+
+    for(int i=1;i<lines.Count;i++){
+        rows.Add(Pad(lines[i].Split(new[]{delim}, StringSplitOptions.None), cols));
+    }
+    return (header, rows);
+}
+
+string[] Pad(string[] arr, int n){
+    if(arr.Length==n) return arr;
+    var r = new string[n];
+    Array.Copy(arr, r, Math.Min(arr.Length, n));
+    for(int i=arr.Length;i<n;i++) r[i]="";
+    return r;
+}
