@@ -140,3 +140,36 @@ List<Dictionary<string, string>> ParseDelimited(string text, string delimiter, b
 
     return rows;
 }
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, List<SortField> fields)
+{
+    if (fields == null || fields.Count == 0) return rows;
+
+    rows.Sort((a, b) =>
+    {
+        foreach (var field in fields)
+        {
+            if (!a.TryGetValue(field.Name, out string? valA)) throw new Exception($"Columna inexistente: {field.Name}");
+            if (!b.TryGetValue(field.Name, out string? valB)) throw new Exception($"Columna inexistente: {field.Name}");
+
+            int cmp;
+            if (field.Numeric)
+            {
+                double numA = double.TryParse(valA, out double da) ? da : 0;
+                double numB = double.TryParse(valB, out double db) ? db : 0;
+                cmp = numA.CompareTo(numB);
+            }
+            else
+            {
+                cmp = string.Compare(valA, valB, StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (cmp != 0)
+            {
+                return field.Descending ? -cmp : cmp;
+            }
+        }
+        return 0;
+    });
+
+    return rows;
+}
