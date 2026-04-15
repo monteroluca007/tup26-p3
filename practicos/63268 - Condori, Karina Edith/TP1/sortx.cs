@@ -88,3 +88,18 @@ AppConfig ParseArgs(string[] args)
         Console.WriteLine("  -h, --help        Muestra esta ayuda.");
     }
 }
+string ReadInput(string? inputFile)
+{
+    if (!string.IsNullOrWhiteSpace(inputFile))
+    {
+        if (!File.Exists(inputFile)) throw new Exception($"El archivo de entrada no existe: {inputFile}");
+        return File.ReadAllText(inputFile);
+    }
+
+    if (Console.IsInputRedirected)
+    {
+        return Console.In.ReadToEnd();
+    }
+
+    throw new Exception("No se especificó un archivo de entrada y no hay datos en stdin.");
+}
