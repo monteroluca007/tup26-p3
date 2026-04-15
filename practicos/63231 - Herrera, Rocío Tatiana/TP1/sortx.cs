@@ -43,6 +43,3 @@ static void PrintHelp(){
     Console.WriteLine("Uso: sortx [entrada [salida]] -b campo[:tipo[:orden]] [-d delim] [-nh] [-h]");
     Console.WriteLine("campo[:tipo[:orden]]: tipo = num (numérico). orden = desc (descendente)");
 }
-
-record SortField(string Name, bool Numeric, bool Descending);
-record AppConfig(string? InputFile, string? OutputFile, string Delimiter, bool NoHeader, List<SortField> Fields);
