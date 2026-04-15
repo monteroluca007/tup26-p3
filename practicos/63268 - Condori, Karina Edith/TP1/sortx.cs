@@ -190,3 +190,21 @@ string Serialize(List<Dictionary<string, string>> rows, List<string> headers, st
 
     return writer.ToString();
 }
+void WriteOutput(string? outputFile, string content)
+{
+    if (!string.IsNullOrWhiteSpace(outputFile))
+    {
+        File.WriteAllText(outputFile, content);
+    }
+    else
+    {
+        Console.Out.Write(content);
+    }
+}
+record SortField(string Name, bool Numeric, bool Descending);
+record AppConfig(
+    string? InputFile,
+    string? OutputFile,
+    string Delimiter,
+    bool NoHeader,
+    List<SortField> SortFields);
