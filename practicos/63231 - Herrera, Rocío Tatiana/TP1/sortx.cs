@@ -86,6 +86,7 @@ string[] Pad(string[] arr, int n){
     for(int i=arr.Length;i<n;i++) r[i]="";
     return r;
 }
+
 SortRows(rows, header, config.Fields);
 
 void SortRows(List<string[]> rows, string[] header, List<SortField> fields){
@@ -115,3 +116,25 @@ void SortRows(List<string[]> rows, string[] header, List<SortField> fields){
         return 0;
     });
 } 
+var output = Serialize(header, rows, config);
+WriteOutput(output, config);
+
+string Serialize(string[] header, List<string[]> rows, AppConfig cfg){
+    var sb = new StringBuilder();
+    if(!cfg.NoHeader && header.Length>0) sb.AppendLine(string.Join(cfg.Delimiter, header));
+    for(int i=0;i<rows.Count;i++) sb.AppendLine(string.Join(cfg.Delimiter, rows[i]));
+    var s = sb.ToString();
+    if(s.EndsWith("\n")) s = s.Substring(0, s.Length-1);
+    return s;
+}
+
+void WriteOutput(string outText, AppConfig cfg){
+    try{
+        if(cfg.OutputFile==null) Console.Write(outText);
+        else File.WriteAllText(cfg.OutputFile, outText);
+    } catch(Exception ex){
+        ExitError("error escribiendo salida: " + ex.Message);
+    }
+}
+record SortField(string Name, bool Numeric, bool Descending);
+record AppConfig(string? InputFile, string? OutputFile, string Delimiter, bool NoHeader, List<SortField> Fields);
