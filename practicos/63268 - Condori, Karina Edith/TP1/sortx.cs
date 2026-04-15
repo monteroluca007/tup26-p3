@@ -103,3 +103,40 @@ string ReadInput(string? inputFile)
 
     throw new Exception("No se especificó un archivo de entrada y no hay datos en stdin.");
 }
+List<Dictionary<string, string>> ParseDelimited(string text, string delimiter, bool noHeader, out List<string> headers)
+{
+    var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+    if (lines.Length == 0) throw new Exception("El archivo de entrada está vacío.");
+
+    headers = new List<string>();
+    var rows = new List<Dictionary<string, string>>();
+    int startIndex = 0;
+
+    var firstLineParts = lines[0].Split(delimiter);
+
+    if (!noHeader)
+    {
+        headers.AddRange(firstLineParts);
+        startIndex = 1;
+    }
+    else
+    {
+        for (int i = 0; i < firstLineParts.Length; i++)
+        {
+            headers.Add(i.ToString());
+        }
+    }
+
+    for (int i = startIndex; i < lines.Length; i++)
+    {
+        var parts = lines[i].Split(delimiter);
+        var row = new Dictionary<string, string>();
+        for (int j = 0; j < headers.Count; j++)
+        {
+            row[headers[j]] = j < parts.Length ? parts[j] : string.Empty;
+        }
+        rows.Add(row);
+    }
+
+    return rows;
+}
