@@ -43,3 +43,13 @@ static void PrintHelp(){
     Console.WriteLine("Uso: sortx [entrada [salida]] -b campo[:tipo[:orden]] [-d delim] [-nh] [-h]");
     Console.WriteLine("campo[:tipo[:orden]]: tipo = num (numérico). orden = desc (descendente)");
 }
+var text = ReadInput(config);
+
+string ReadInput(AppConfig cfg){
+    try{
+        return cfg.InputFile == null ? Console.In.ReadToEnd() : File.ReadAllText(cfg.InputFile);
+    } catch(Exception ex){
+        ExitError("error leyendo entrada: " + ex.Message);
+        return "";
+    }
+}
