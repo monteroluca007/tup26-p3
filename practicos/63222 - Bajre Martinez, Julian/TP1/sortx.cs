@@ -129,6 +129,59 @@ class Program
         return Console.In.ReadToEnd();
     }
 
+    static string LeerEntrada(ConfiguracionApp config)
+    {
+        if (config.ArchivoEntrada != null)
+            return File.ReadAllText(config.ArchivoEntrada);
+
+        return Console.In.ReadToEnd();
+    }
+
+    static List<Dictionary<string, string>> ParsearDelimitado(string texto, ConfiguracionApp config)
+    {
+        var lineas = texto
+            .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(l => l.TrimEnd('\r'))
+            .ToArray();
+
+        if (lineas.Length == 0)
+            throw new Exception("No se encontraron datos de entrada.");
+
+        string[] encabezados;
+        int inicio = 0;
+
+        if (!config.SinEncabezado)
+        {
+            encabezados = lineas[0].Split(new[] { config.Delimitador }, StringSplitOptions.None);
+            inicio = 1;
+        }
+        else
+        {
+            int cantidadCampos = lineas[0].Split(new[] { config.Delimitador }, StringSplitOptions.None).Length;
+            encabezados = Enumerable.Range(0, cantidadCampos).Select(i => i.ToString()).ToArray();
+        }
+
+        var filas = new List<Dictionary<string, string>>();
+
+        for (int i = inicio; i < lineas.Length; i++)
+        {
+            var valores = lineas[i].Split(new[] { config.Delimitador }, StringSplitOptions.None);
+
+            if (valores.Length != encabezados.Length)
+                throw new Exception("La fila " + (i + 1) + " tiene una cantidad de campos diferente al encabezado.");
+
+            var fila = new Dictionary<string, string>();
+
+            for (int j = 0; j < encabezados.Length; j++)
+            {
+                fila[encabezados[j]] = valores[j];
+            }
+
+            filas.Add(fila);
+        }
+
+        return filas;
+    }
     
 
     
