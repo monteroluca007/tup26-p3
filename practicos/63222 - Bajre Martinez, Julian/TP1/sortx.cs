@@ -227,6 +227,72 @@ class Program
 
         return filasOrdenadas != null ? filasOrdenadas.ToList() : filas;
     }
-    
+
+    static string Serializar(List<Dictionary<string, string>> filas, ConfiguracionApp config)
+    {
+        if (filas.Count == 0)
+            return string.Empty;
+
+        var encabezados = filas[0].Keys.ToArray();
+        var lineas = new List<string>();
+
+        if (!config.SinEncabezado)
+        {
+            lineas.Add(string.Join(config.Delimitador, encabezados));
+        }
+
+        foreach (var fila in filas)
+        {
+            lineas.Add(string.Join(config.Delimitador, encabezados.Select(e => fila[e])));
+        }
+
+        return string.Join("\n", lineas);
+    }
+
+    static void EscribirSalida(ConfiguracionApp config, string salida)
+    {
+        if (config.ArchivoSalida != null)
+            File.WriteAllText(config.ArchivoSalida, salida);
+        else
+            Console.WriteLine(salida);
+    }
+}
+
+class CampoOrden
+{
+    public string Nombre { get; private set; }
+    public bool EsNumerico { get; private set; }
+    public bool Descendente { get; private set; }
+
+    public CampoOrden(string nombre, bool esNumerico, bool descendente)
+    {
+        Nombre = nombre;
+        EsNumerico = esNumerico;
+        Descendente = descendente;
+    }
+}
+
+class ConfiguracionApp
+{
+    public string ArchivoEntrada { get; private set; }
+    public string ArchivoSalida { get; private set; }
+    public string Delimitador { get; private set; }
+    public bool SinEncabezado { get; private set; }
+    public List<CampoOrden> CamposOrden { get; private set; }
+
+    public ConfiguracionApp(
+        string archivoEntrada,
+        string archivoSalida,
+        string delimitador,
+        bool sinEncabezado,
+        List<CampoOrden> camposOrden)
+    {
+        ArchivoEntrada = archivoEntrada;
+        ArchivoSalida = archivoSalida;
+        Delimitador = delimitador;
+        SinEncabezado = sinEncabezado;
+        CamposOrden = camposOrden;
+    }
+}
 
     
