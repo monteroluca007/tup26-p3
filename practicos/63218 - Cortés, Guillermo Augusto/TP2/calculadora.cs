@@ -183,4 +183,33 @@ public static Integer operator *(Integer a, Integer b)
 
     return new Integer(res.ToList(), a.negativo ^ b.negativo);
 }
+public static Integer operator /(Integer a, Integer b)
+{
+    if (b.IsZero())
+        throw new DivideByZeroException();
+
+    Integer resto = new Integer("0");
+    Integer cociente = new Integer("0");
+
+    foreach (var d in a.digitos)
+    {
+        resto = resto * 10 + new Integer(d.ToString());
+
+        int count = 0;
+        while (resto.CompareTo(b) >= 0)
+        {
+            resto -= b;
+            count++;
+        }
+
+        cociente = cociente * 10 + new Integer(count.ToString());
+    }
+
+    return cociente;
+}
+
+public static Integer operator %(Integer a, Integer b)
+{
+    return a - (a / b) * b;
+}
 }
