@@ -120,3 +120,15 @@ class Program
         Console.WriteLine("-nh | --no-header");
         Console.WriteLine("-b | --by campo[:num][:desc]");
     }
+
+    static string LeerEntrada(ConfiguracionApp config)
+    {
+        if (config.ArchivoEntrada != null)
+            return File.ReadAllText(config.ArchivoEntrada);
+
+        return Console.In.ReadToEnd();
+    }
+
+    
+
+    
