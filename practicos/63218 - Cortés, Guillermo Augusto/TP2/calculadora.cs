@@ -44,4 +44,43 @@ public class Integer : IComparable<Integer>
         if (digitos.Count == 1 && digitos[0] == 0)
             negativo = false;
     }
+    public static Integer Parse(string texto) => new Integer(texto);
+
+public static implicit operator Integer(int valor)
+{
+    return new Integer(valor.ToString());
+}
+
+public override string ToString()
+{
+    return (negativo ? "-" : "") + string.Join("", digitos);
+}
+
+public bool IsZero() => digitos.Count == 1 && digitos[0] == 0;
+public bool IsNegative() => negativo;
+
+public int CompareTo(Integer other)
+{
+    if (negativo != other.negativo)
+        return negativo ? -1 : 1;
+
+    if (digitos.Count != other.digitos.Count)
+    {
+        int cmp = digitos.Count.CompareTo(other.digitos.Count);
+        return negativo ? -cmp : cmp;
+    }
+
+    for (int i = 0; i < digitos.Count; i++)
+    {
+        if (digitos[i] != other.digitos[i])
+        {
+            int cmp = digitos[i].CompareTo(other.digitos[i]);
+            return negativo ? -cmp : cmp;
+        }
+    }
+
+    return 0;
+}
+
+public bool Equals(Integer other) => CompareTo(other) == 0;
 }
