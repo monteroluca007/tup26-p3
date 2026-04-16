@@ -137,7 +137,7 @@ calculadora
 calculadora --help
 
 # Ejecutar pruebas
-calculadora --probar
+calculadora --test
 ```
 
 ---
