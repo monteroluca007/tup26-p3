@@ -165,4 +165,22 @@ private static bool AbsMayor(Integer a, Integer b)
 
     return true;
 }
+public static Integer operator *(Integer a, Integer b)
+{
+    int[] res = new int[a.digitos.Count + b.digitos.Count];
+
+    for (int i = a.digitos.Count - 1; i >= 0; i--)
+    {
+        for (int j = b.digitos.Count - 1; j >= 0; j--)
+        {
+            int mul = a.digitos[i] * b.digitos[j];
+            int suma = res[i + j + 1] + mul;
+
+            res[i + j + 1] = suma % 10;
+            res[i + j] += suma / 10;
+        }
+    }
+
+    return new Integer(res.ToList(), a.negativo ^ b.negativo);
+}
 }
