@@ -182,6 +182,51 @@ class Program
 
         return filas;
     }
+
+    static List<Dictionary<string, string>> OrdenarFilas(List<Dictionary<string, string>> filas, ConfiguracionApp config)
+    {
+        if (filas.Count == 0)
+            return filas;
+
+        IOrderedEnumerable<Dictionary<string, string>> filasOrdenadas = null;
+
+        foreach (var campo in config.CamposOrden)
+        {
+            if (filas.Any(f => !f.ContainsKey(campo.Nombre)))
+                throw new Exception("El campo '" + campo.Nombre + "' no existe en todas las filas.");
+
+            Func<Dictionary<string, string>, object> selector = fila =>
+            {
+                var valor = fila[campo.Nombre];
+
+                if (campo.EsNumerico)
+                {
+                    double numero;
+                    if (!double.TryParse(valor, out numero))
+                        throw new Exception("Valor '" + valor + "' no es numérico en campo '" + campo.Nombre + "'");
+
+                    return numero;
+                }
+
+                return valor;
+            };
+
+            if (filasOrdenadas == null)
+            {
+                filasOrdenadas = campo.Descendente
+                    ? filas.OrderByDescending(selector)
+                    : filas.OrderBy(selector);
+            }
+            else
+            {
+                filasOrdenadas = campo.Descendente
+                    ? filasOrdenadas.ThenByDescending(selector)
+                    : filasOrdenadas.ThenBy(selector);
+            }
+        }
+
+        return filasOrdenadas != null ? filasOrdenadas.ToList() : filas;
+    }
     
 
     
