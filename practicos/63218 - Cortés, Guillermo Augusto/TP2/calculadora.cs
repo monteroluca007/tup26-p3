@@ -83,4 +83,86 @@ public int CompareTo(Integer other)
 }
 
 public bool Equals(Integer other) => CompareTo(other) == 0;
+public static Integer operator +(Integer a, Integer b)
+{
+    if (a.negativo == b.negativo)
+        return new Integer(Sumar(a.digitos, b.digitos), a.negativo);
+
+    if (AbsMayor(a, b))
+        return new Integer(Restar(a.digitos, b.digitos), a.negativo);
+
+    return new Integer(Restar(b.digitos, a.digitos), b.negativo);
+}
+
+public static Integer operator -(Integer a, Integer b)
+{
+    return a + new Integer(b.digitos, !b.negativo);
+}
+
+private static List<int> Sumar(List<int> a, List<int> b)
+{
+    var res = new List<int>();
+    int carry = 0;
+
+    a = a.ToList(); b = b.ToList();
+    a.Reverse(); b.Reverse();
+
+    int max = Math.Max(a.Count, b.Count);
+
+    for (int i = 0; i < max; i++)
+    {
+        int da = i < a.Count ? a[i] : 0;
+        int db = i < b.Count ? b[i] : 0;
+
+        int suma = da + db + carry;
+        res.Add(suma % 10);
+        carry = suma / 10;
+    }
+
+    if (carry > 0) res.Add(carry);
+    res.Reverse();
+    return res;
+}
+
+private static List<int> Restar(List<int> a, List<int> b)
+{
+    var res = new List<int>();
+    int borrow = 0;
+
+    a = a.ToList(); b = b.ToList();
+    a.Reverse(); b.Reverse();
+
+    for (int i = 0; i < a.Count; i++)
+    {
+        int da = a[i];
+        int db = i < b.Count ? b[i] : 0;
+
+        int r = da - db - borrow;
+        if (r < 0)
+        {
+            r += 10;
+            borrow = 1;
+        }
+        else borrow = 0;
+
+        res.Add(r);
+    }
+
+    res.Reverse();
+    return res;
+}
+
+private static bool AbsMayor(Integer a, Integer b)
+{
+    if (a.digitos.Count != b.digitos.Count)
+        return a.digitos.Count > b.digitos.Count;
+
+    for (int i = 0; i < a.digitos.Count; i++)
+    {
+        if (a.digitos[i] != b.digitos[i])
+            return a.digitos[i] > b.digitos[i];
+    }
+
+    return true;
+}
 }
